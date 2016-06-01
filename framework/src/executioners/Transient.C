@@ -220,7 +220,13 @@ void
 Transient::postStep()
 {
   _time_stepper->postStep();
+
+  unsigned int DT2_step = _time_stepper->getDT2Step();
+
+  if (lastSolveConverged() && DT2_step <= 1)
+    outputStep();
 }
+
 
 void
 Transient::execute()
@@ -494,22 +500,20 @@ Transient::endStep(Real input_time)
     _time = input_time;
 
   _picard_converged=false;
+}
 
-  _last_solve_converged = lastSolveConverged();
-
-  if (_last_solve_converged && !_xfem_repeat_step)
-  {
-    // Compute the Error Indicators and Markers
-    _problem.computeIndicators();
-    _problem.computeMarkers();
-
-    // Perform the output of the current time step
-    _problem.outputStep(EXEC_TIMESTEP_END);
-
-    //output
-    if (_time_interval && (_time + _timestep_tolerance >= _next_interval_output_time))
-      _next_interval_output_time += _time_interval_output_interval;
-  }
+void
+Transient::outputStep()
+{  
+  // Compute the Error Indicators and Markers
+  _problem.computeIndicatorsAndMarkers();
+  
+  // Perform the output of the current time step
+  _problem.outputStep(EXEC_TIMESTEP_END);
+  
+  //output
+  if (_time_interval && (_time + _timestep_tolerance >= _next_interval_output_time))
+    _next_interval_output_time += _time_interval_output_interval;
 }
 
 Real
@@ -681,6 +685,9 @@ Transient::keepGoing()
     _console << "Aborting as solve did not converge and input selected to abort" << std::endl;
     keep_going = false;
   }
+
+  if (!keep_going)
+    outputStep();
 
   return keep_going;
 }

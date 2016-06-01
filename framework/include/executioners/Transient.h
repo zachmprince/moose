@@ -90,6 +90,7 @@ public:
   virtual void incrementStepOrReject();
 
   virtual void endStep(Real input_time = -1.0);
+  virtual void outputStep();
 
   /**
    * Can be used to set the next "target time" which is a time to nail perfectly.

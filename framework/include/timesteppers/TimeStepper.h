@@ -90,6 +90,8 @@ public:
    */
   Real getCurrentDT() { return _current_dt; }
 
+  virtual unsigned int getDT2Step() { return 0; }
+  
   virtual void forceTimeStep(Real dt);
 
   ///@{

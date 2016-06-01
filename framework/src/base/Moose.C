@@ -303,6 +303,7 @@
 #include "IterationAdaptiveDT.h"
 #include "SolutionTimeAdaptiveDT.h"
 #include "DT2.h"
+#include "DT2mod.h"
 #include "PostprocessorDT.h"
 #include "AB2PredictorCorrector.h"
 
@@ -732,6 +733,7 @@ registerObjects(Factory & factory)
   registerTimeStepper(IterationAdaptiveDT);
   registerTimeStepper(SolutionTimeAdaptiveDT);
   registerTimeStepper(DT2);
+  registerTimeStepper(DT2mod);
   registerTimeStepper(PostprocessorDT);
   registerTimeStepper(AB2PredictorCorrector);
   // time integrators
