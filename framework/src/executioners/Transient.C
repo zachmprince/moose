@@ -326,14 +326,35 @@ Transient::takeStep(Real input_dt)
 
     solveStep(input_dt);
 
-    // If the last solve didn't converge then we need to exit this step completely (even in the case of Picard)
-    // So we can retry...
-    if (!lastSolveConverged())
-      return;
-
+    checkPicardConverge();
+    if (_picard_converged) return;
     ++_picard_it;
   }
 }
+
+//For IQS tests only
+void
+Transient::checkPicardConverge()
+{
+  if (_picard_max_its > 1)
+  {
+    _picard_timestep_end_norm = _problem.computeResidualL2Norm();
+
+    _console << "Picard Norm after TIMESTEP_END MultiApps: " << _picard_timestep_end_norm << '\n';
+
+    Real max_norm = std::max(_picard_timestep_begin_norm, _picard_timestep_end_norm);
+
+    Real max_relative_drop = max_norm / _picard_initial_norm;
+
+    if (max_norm < _picard_abs_tol || max_relative_drop < _picard_rel_tol)
+    {
+      _console << "Picard converged!" << std::endl;
+
+      _picard_converged = true;
+    }
+  }
+}
+
 
 void
 Transient::solveStep(Real input_dt)
