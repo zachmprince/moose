@@ -205,6 +205,8 @@ public:
   //iteration count (which starts at 0), increment by 1.
   Real numPicardIts() { return _picard_it+1; }
 
+  // For IQS tests only
+  virtual void checkPicardConverge();
 
 protected:
   /**
