@@ -1,0 +1,26 @@
+[Tests]
+  issues = '#14710'
+  requirement = 'The system shall provide polynomial chaos expansion capabilities for implemented distributions'
+
+  [legendre]
+    issues = '#14710'
+    requirement = 'The system shall provide polynomial chaos expansion capabilities for implemented distributions'
+
+    [monte_carlo_integration]
+      type = CSVDiff
+      input = master_2d_mc.i
+      csvdiff = 'master_2d_mc_out_pc_coeff_0002.csv master_2d_mc_out_pc_samp_0002.csv'
+      boost = true
+      requirement = 'The system shall compute polynomial chaos coefficients using Monte Carlo integration.'
+      max_parallel = 1
+    []
+    [gauss_legendre_integration]
+      type = CSVDiff
+      input = master_2d_quad.i
+      csvdiff = 'master_2d_quad_out_pc_coeff_0002.csv master_2d_quad_out_pc_samp_0002.csv'
+      boost = true
+      requirement = 'The system shall compute polynomial chaos coefficients using Gauss-legendre quadrature.'
+      max_parallel = 1
+    []
+  []
+[]
