@@ -112,12 +112,19 @@ PolynomialChaos::evaluate(const std::vector<Real> & x) const
 
   mooseAssert(x.size() == _ndim, "Number of inputted parameters does not match PC model.");
 
+  DenseMatrix<Real> poly_val(_ndim, _order);
+
+  // Evaluate polynomials to avoid duplication
+  for (unsigned int d = 0; d < _ndim; ++d)
+    for (unsigned int i = 0; i < _order; ++i)
+      poly_val(d, i) = _poly[d]->compute(i, x[d], /*normalize =*/false);
+
   Real val = 0;
   for (unsigned int i = 0; i < _ncoeff; ++i)
   {
     Real tmp = _coeff[i];
     for (unsigned int d = 0; d < _ndim; ++d)
-      tmp *= _poly[d]->compute(_tuple[i][d], x[d], /*normalize =*/false);
+      tmp *= poly_val(d, _tuple[i][d]);
     val += tmp;
   }
 

@@ -10,6 +10,8 @@
 #pragma once
 
 #include "UniformDistribution.h"
+#include "NormalDistribution.h"
+#include "BoostNormalDistribution.h"
 
 /**
  * Polynomials and quadratures based on defined distributions for Polynomial Chaos
@@ -41,22 +43,39 @@ class Legendre : public Polynomial
 {
 public:
   Legendre(const UniformDistribution * dist);
-#ifdef LIBMESH_HAVE_EXTERNAL_BOOST
   virtual Real
   compute(const unsigned int order, const Real x, const bool normalize = true) const override;
-#endif
 
 private:
   Real _lower_bound;
   Real _upper_bound;
 };
 
-#ifdef LIBMESH_HAVE_EXTERNAL_BOOST
 Real legendre(const unsigned int order,
               const Real x,
               const Real lower_bound = -1.0,
               const Real upper_bound = 1.0);
-#endif
+
+/**
+ * Normal distributions use Hermite polynomials
+ */
+class Hermite : public Polynomial
+{
+public:
+  Hermite(const NormalDistribution * dist);
+  Hermite(const BoostNormalDistribution * dist);
+  virtual Real
+  compute(const unsigned int order, const Real x, const bool normalize = true) const override;
+
+private:
+  Real _mu;
+  Real _sig;
+};
+
+Real hermite(const unsigned int order,
+             const Real x,
+             const Real mu = 0.0,
+             const Real sig = 1.0);
 
 /**
  * General quadrature class with functions for getting weights and points
