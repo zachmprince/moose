@@ -549,9 +549,12 @@ mooseSlepcEigenFormFunctionAB(SNES /*snes*/, Vec x, Vec Ax, Vec Bx, void * ctx)
   System & sys = nl.system();
 
   PetscVector<Number> X_global(x, sys.comm()), AX(Ax, sys.comm()), BX(Bx, sys.comm());
+  PetscVector<Number> & X_sys = *cast_ptr<PetscVector<Number> *>(sys.solution.get());
 
   // update local solution
-  X_global.localize(*sys.current_local_solution.get());
+  X_global.swap(X_sys);
+  sys.update();
+  X_global.swap(X_sys);
 
   AX.zero();
   BX.zero();
