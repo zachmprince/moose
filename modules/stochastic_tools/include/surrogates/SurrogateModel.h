@@ -26,6 +26,14 @@ public:
   virtual Real evaluate(const std::vector<Real> & x) const = 0;
 
   /**
+   * Degrees of freedom for the model, used mainly for goodness of fit calculations
+   */
+  virtual unsigned int getDOF() const
+  {
+    mooseError("Number of degrees of freedom has not been defined for ", type());
+  }
+
+  /**
    * The name for training data stored within the MooseApp
    */
   const std::string & modelMetaDataName() const { return _model_meta_data_name; }

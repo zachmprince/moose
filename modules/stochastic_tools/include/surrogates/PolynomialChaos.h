@@ -21,6 +21,7 @@ public:
   static InputParameters validParams();
   PolynomialChaos(const InputParameters & parameters);
   virtual Real evaluate(const std::vector<Real> & x) const override;
+  virtual unsigned int getDOF() const override { return _ncoeff; }
 
   /// Access number of dimensions/parameters
   std::size_t getNumberOfParameters() const { return _poly.size(); }

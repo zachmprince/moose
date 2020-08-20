@@ -36,6 +36,11 @@ public:
   /// Must have function, not used in this object.
   virtual Real evaluate(const std::vector<Real> & x) const override;
 
+  virtual unsigned int getDOF() const override
+  {
+    return *std::max_element(_final_ranks.begin(), _final_ranks.end());
+  }
+
 protected:
   /// Initialize reduced matrices, vectors and additional containers.
   void initializeReducedSystem();

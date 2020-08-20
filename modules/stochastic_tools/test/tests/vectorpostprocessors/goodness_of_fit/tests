@@ -1,0 +1,93 @@
+[Tests]
+  design = GoodnessOfFit.md
+  issues = '#14834'
+
+  [gof]
+    requirement = "The system shall calculate goodness of fit measurements for surrogate models by "
+    [vector]
+      type = CSVDiff
+      input = gof.i
+      csvdiff = gof_out_gof_0002.csv
+      allow_test_objects = true
+
+      detail = "comparing vectors of observed data and model data, "
+    []
+    [dist_vector]
+      type = CSVDiff
+      input = gof.i
+      csvdiff = gof_out_gof_0002.csv
+      cli_args = 'VectorPostprocessors/data/parallel_type=DISTRIBUTED VectorPostprocessors/model_data/parallel_type=DISTRIBUTED'
+      min_parallel = 4
+      prereq = gof/vector
+      allow_test_objects = true
+
+      detail = "comparing distributed vectors of observed data and model data, "
+    []
+    [sampler]
+      type = CSVDiff
+      input = gof_sampler.i
+      csvdiff = gof_sampler_out_gof_0002.csv
+      allow_test_objects = true
+
+      detail = "and using sampler to evaluate surrogate directly."
+    []
+  []
+
+  [errors]
+    requirement = "The system shall throw an error in goodness of fit analysis if "
+    [model_missing_dof]
+      type = RunException
+      input = gof_error.i
+      cli_args = 'VectorPostprocessors/inactive=gof2'
+      expect_err = "Models must be specified in 'model' param for selected GOF metrics."
+      allow_test_objects = true
+
+      detail = "models are not specified for certain metrics, "
+    []
+    [sampler_and_model_data]
+      type = RunException
+      input = gof.i
+      cli_args = 'VectorPostprocessors/gof/sampler=sample'
+      expect_err = "Using sampler to evaluate surrogate models, so no results vector is needed."
+      allow_test_objects = true
+
+      detail = "model data and sampler is specified, "
+    []
+    [model_missing_sampler]
+      type = RunException
+      input = gof_error.i
+      cli_args = 'VectorPostprocessors/inactive=gof1'
+      expect_err = "Using sampler to evaluate models, but no models are provided."
+      allow_test_objects = true
+
+      detail = "sampler specified but no models are specified, "
+    []
+    [wrong_num_vectors]
+      type = RunException
+      input = gof.i
+      cli_args = "VectorPostprocessors/gof/model_results_vector=poly_reg1"
+      expect_err = "There must be a vector name for each VectorPostprocessor listed in 'model_results_vpp'."
+      allow_test_objects = true
+
+      detail = "number of model vectorpostprocessors does not match number of vectors, "
+    []
+    [wrong_num_models]
+      type = RunException
+      input = gof.i
+      cli_args = "VectorPostprocessors/gof/model=poly_reg1"
+      expect_err = "Number of models specified is inconsistent with number of model results vectors."
+      allow_test_objects = true
+
+      detail = "number of models does not match number of model data vectors, "
+    []
+    [not_distributed]
+      type = RunException
+      input = gof.i
+      cli_args = "VectorPostprocessors/data/parallel_type=DISTRIBUTED"
+      expect_err = "The data vectorpostprocessor parallel type must match the model vectorpostprocessor\(s\) type."
+      allow_test_objects = true
+
+      detail = "or parallel type for observed and model data do not match."
+    []
+  []
+[]

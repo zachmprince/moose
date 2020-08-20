@@ -84,9 +84,12 @@ EvaluateSurrogate::execute()
 void
 EvaluateSurrogate::finalize()
 {
-  for (auto & vec : _value_vector)
-    _communicator.gather(0, *vec);
-  if (_output_samples)
-    for (auto & ppv_ptr : _sample_vector)
-      _communicator.gather(0, *ppv_ptr);
+  if (_parallel_type == "REPLICATED")
+  {
+    for (auto & vec : _value_vector)
+      _communicator.gather(0, *vec);
+    if (_output_samples)
+      for (auto & ppv_ptr : _sample_vector)
+        _communicator.gather(0, *ppv_ptr);
+  }
 }

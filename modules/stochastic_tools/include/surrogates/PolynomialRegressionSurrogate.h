@@ -20,6 +20,8 @@ public:
 
   virtual Real evaluate(const std::vector<Real> & x) const override;
 
+  virtual unsigned int getDOF() const override { return _coeff.size(); }
+
 protected:
   /// Coefficients of regression model
   const std::vector<Real> & _coeff;
