@@ -1,0 +1,44 @@
+[Tests]
+  issues = '#14834'
+  design = 'UniformSplitSampler.md RandomSplitSampler.md'
+
+  [split]
+    requirement = "The system shall be able to extract rows of a sampler by "
+
+    [uniform]
+      type = CSVDiff
+      input = uniform_split.i
+      csvdiff = 'uniform_split_out_data_0000.csv'
+
+      detail = "extracting uniform chunks or "
+    []
+    [random]
+      type = CSVDiff
+      input = random_split.i
+      csvdiff = 'random_split_out_data1_0000.csv random_split_out_data2_0000.csv'
+
+      detail = "randomly selecting rows."
+    []
+  []
+
+  [errors]
+    requirement = "The system shall error when extracting samples that are not in supplied sampler when using "
+
+    [uniform]
+      type = RunException
+      input = uniform_split.i
+      cli_args = "Samplers/split/num_rows='3 2 2'"
+      expect_err = "sampler\_row \+ num\_rows \(11\) is greater than the number of rows in sampler \(10\)."
+
+      detail = "UniformSplit and"
+    []
+    [random]
+      type = RunException
+      input = random_split.i
+      cli_args = "Samplers/split/num_rows=11"
+      expect_err = "Number of rows requested is greater than the number of rows in sampler."
+
+      detail = "RandomSplit."
+    []
+  []
+[]
