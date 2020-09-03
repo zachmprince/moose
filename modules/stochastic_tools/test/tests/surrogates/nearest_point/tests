@@ -15,13 +15,22 @@
     allow_test_objects = true
     csvdiff = 'evaluate_out_results_0002.csv'
     prereq = train # Creates data files that this test uses
-    detail = 'evaluating and '
+    detail = 'evaluating, '
   []
   [train_and_load]
     type = CSVDiff
     input = cartesian.i
     allow_test_objects = true
     csvdiff = 'cartesian_out_results_0002.csv'
-    detail = 'training and loading.'
+    detail = 'training and loading, '
+  []
+  [skip]
+    type = CSVDiff
+    input = cartesian.i
+    allow_test_objects = true
+    csvdiff = 'cartesian_skip_results_0002.csv'
+    cli_args = "Trainers/train/skip_index='1 8' Trainers/train/num_skip='2 2'
+                Outputs/file_base=cartesian_skip"
+    detail = 'and train with ommitted points.'
   []
 []

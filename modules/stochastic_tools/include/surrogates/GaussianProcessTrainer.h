@@ -9,40 +9,27 @@
 
 #pragma once
 
-#include "SurrogateTrainer.h"
+#include "SamplerTrainer.h"
 #include "Standardizer.h"
 #include <Eigen/Dense>
-
-#include "Distribution.h"
 
 #include "CovarianceFunctionBase.h"
 #include "CovarianceInterface.h"
 
-class GaussianProcessTrainer : public SurrogateTrainer, public CovarianceInterface
+class GaussianProcessTrainer : public SamplerTrainer, public CovarianceInterface
 {
 public:
   static InputParameters validParams();
   GaussianProcessTrainer(const InputParameters & parameters);
-  virtual void initialSetup() override;
-  virtual void initialize() override;
-  virtual void execute() override;
-  virtual void finalize() override;
 
   CovarianceFunctionBase * getCovarPtr() const { return _covariance_function; }
 
+protected:
+  virtual void preTrain() override;
+  virtual void train() override;
+  virtual void postTrain() override;
+
 private:
-  /// Sampler from which the parameters were perturbed
-  Sampler * _sampler = nullptr;
-
-  /// Vector postprocessor of the results from perturbing the model with _sampler
-  const VectorPostprocessorValue * _values_ptr = nullptr;
-
-  /// True when _sampler data is distributed
-  bool _values_distributed;
-
-  /// Total number of parameters/dimensions
-  unsigned int _n_params;
-
   /// Paramaters (x) used for training, along with statistics
   RealEigenMatrix & _training_params;
 
@@ -70,9 +57,6 @@ private:
   /// Switch for training data(y) standardization
   bool _standardize_data;
 
-  /// Type of covariance function used for this surrogate
-  std::string & _covar_type;
-
   /// Scalar hyperparameters. Stored for use in surrogate
   std::unordered_map<std::string, Real> & _hyperparam_map;
 
@@ -81,4 +65,7 @@ private:
 
   /// Covariance function object
   CovarianceFunctionBase * _covariance_function = nullptr;
+
+  /// Type of covariance function used for this surrogate
+  std::string & _covar_type;
 };

@@ -24,6 +24,7 @@ PolynomialRegressionSurrogate::PolynomialRegressionSurrogate(const InputParamete
   : SurrogateModel(parameters),
     _coeff(getModelData<std::vector<Real>>("_coeff")),
     _power_matrix(getModelData<std::vector<std::vector<unsigned int>>>("_power_matrix")),
+    _hatval(getModelData<std::vector<Real>>("_hatval")),
     _max_degree(getModelData<unsigned int>("_max_degree"))
 {
 }

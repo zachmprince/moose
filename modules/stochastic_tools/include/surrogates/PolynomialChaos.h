@@ -60,6 +60,17 @@ public:
   Real computeSobolIndex(const std::set<unsigned int> & ind) const;
   Real computeSobolTotal(const unsigned int dim) const;
 
+  /**
+   * Obtaining leverages which are equivalent to d\hat{y}_i/dy_i or x_i(X^TX)^{-1}x_i^T.
+   * This is mainly used for computing leave-one-out RSME.
+   * See https://robjhyndman.com/hyndsight/loocv-linear-models/ for more details
+   */
+  Real getLeverage(dof_id_type ind) const
+  {
+    mooseAssert(ind < _hatval.size(), "Leverage index out of bounds.");
+    return _hatval[ind];
+  }
+
 private:
   /// Variables calculation and for looping over the computed coefficients in parallel
   ///
@@ -95,4 +106,7 @@ private:
 
   /// The distributions used for sampling
   const std::vector<std::unique_ptr<const PolynomialQuadrature::Polynomial>> & _poly;
+
+  /// Leverages
+  const std::vector<Real> & _hatval;
 };

@@ -8,17 +8,17 @@ Building a surrogate model requires the creation of two objects: SurrogateTraine
 
 ## Creating a Trainer
 
-This example will go over the creation of [NearestPointTrainer](NearestPointTrainer.md). [Trainers](Trainers/index.md) are technically a type of [GeneralUserObject.md] with the same `validParams`, `initialSetup`, `initialize`, `execute`, and `finalize` functions that are executed during the object's call.
+This example will go over the creation of [NearestPointTrainer](NearestPointTrainer.md). Most [trainers](Trainers/index.md) are derived from the [SamplerTrainer](SamplerTrainer.C) base class, which is technically a type of [GeneralUserObject.md] with the same `validParams`, `initialSetup`, `initialize`, `execute`, and `finalize` functions that are executed during the object's call. This class takes in predictor data in the form a sampler and response data in the form of a [vectorpostprocessor](VectorPostprocessors/index.md) vector, which can be seen in the following input parameters.
 
-### validParams
+!listing SamplerTrainer.C re=InputParameters\sSamplerTrainer::validParams.*?^}
 
-Typically, the trainer requires the input of a sampler, so that it understands what the inputs of the full-order model were run. The trainer also needs the output values from the full-order model which are stored in a [vector postprocessor](VectorPostprocessors/index.md).
+This parent class uses the `execute` function to loop through the sampler and it is the prerogative of the derived class, i.e. the trainer being created, to overwrite the `preTrain`, `train`, and `postTrain` functions.
 
-!listing NearestPointTrainer.C re=InputParameters\sNearestPointTrainer::validParams.*?^}
+!listing SamplerTrainer.C re=void\sSamplerTrainer::execute.*?^}
 
 ### Constructor
 
-All trainers are based on SurrogateTrainer, which provides the necessary interface for saving the surrogate model data. All the data meant to be saved is defined in the constructor of the training object. In [NearestPointTrainer](NearestPointTrainer.md), the variable `_sample_points` is declared as the necessary surrogate data, see [Trainers](Trainers/index.md) for more information on declaring model data:
+All trainers are based on [SurrogateTrainer](SurrogateTrainer.C), which provides the necessary interface for saving the surrogate model data. All the data meant to be saved is defined in the constructor of the training object. In [NearestPointTrainer](NearestPointTrainer.md), the variable `_sample_points` is declared as the necessary surrogate data, see [Trainers](Trainers/index.md) for more information on declaring model data:
 
 !listing NearestPointTrainer.C re=NearestPointTrainer::NearestPointTrainer.*?^}
 
@@ -26,41 +26,28 @@ The member variable `_sample_points` is defined in the header file:
 
 !listing NearestPointTrainer.h start=_sample_points end=_sample_points include-end=true
 
-### initialSetup
+### preTrain
 
-Since [UserObjects](UserObjects/index.md) are constructed before [Samplers](Samplers/index.md) and [VectorPostprocessors](VectorPostprocessors/index.md), the sampler and vector postprocessor variables need to be set in `initialSetup`:
+`preTrain` is called before the sampler loop. This is typically where the model data is resized based on the inputted predictor and response data. In [NearestPointTrainer.md], this is where the variable `_sampler_data` is resized based on the number of parameters and samples.
 
-!listing NearestPointTrainer.C re=void\sNearestPointTrainer::initialSetup.*?^}
+!listing NearestPointTrainer.C re=void\sNearestPointTrainer::preTrain.*?^}
 
-`_values_distributed` simply determines whether the values in the vector postprocessor are distributed, which necessitates different indices when looping through them. Since the definition of these variables is outside the constructor, they need to be pointers:
+### train
 
-!listing NearestPointTrainer.h start=/// Sampler end=_values_ptr include-end=true
+`train` is called within the local loop of samples. [SamplerTrainer.C] offers several protected member variables that the derived class can use for training, including `_row`, `_p`, `_local_p`, `_data`, and `_val`. `_row` is the global row index of the sampling matrix, while `_p` and `_local_p` are the global and local data index, respectively. `_data` is the current row of the sampler matrix (predictor data) and `_val` is value from the inputted vector (response data). [NearestPointTrainer.md] uses these to fill in the `_sampler_data` variable.
 
-### initialize
+!listing NearestPointTrainer.C re=void\sNearestPointTrainer::train.*?^}
 
-`initialize` is called before `execute` is called for all [UserObjects](UserObjects/index.md). For [NearestPointTrainer.md], a check of the size of the sampler is performed and vector postprocessor and resize `_sample_points` appropriately:
 
-!listing NearestPointTrainer.C re=void\sNearestPointTrainer::initialize.*?^}
+### postTrain
 
-Note that `getNumberOfRows()` is used to size the array, this is so that each processor contains a portion of the samples and results. We will gather all samples in `finalize`.
+`postTrain` is called after the sampler loop is completed. This is typically where processor communication happens. Here, we use `postTrain` to gather all the local `_sample_points` so that each processor has the full copy. `_communicator.allgather` makes it so that every processor has a copy of the full array and `_communicator.gather` makes it so that only one of the processors has the full copy, the latter is typically used because outputting only happens on the root processor. See [libMesh::Parallel::Communicator](http://libmesh.github.io/doxygen/classlibMesh_1_1Parallel_1_1Communicator.html) for more communication options.
 
-### execute
-
-`execute` is where the actual training occurs. Here, a loop through the local processor's samples is performed to gather the parameter data and results:
-
-!listing NearestPointTrainer.C re=void\sNearestPointTrainer::execute.*?^}
-
-The `offset` variable is defined by whether or not the vector postprocessor values are distributed. Also, the `ind` variable defines the offset for saving the distributed samples.
-
-### finalize
-
-`finalize` is called after `execute` is called for all [UserObjects](UserObjects/index.md). This is typically where processor communication happens. Here, we use `finalize` to gather all the local `_sample_points` so that each processor has the full copy. `_communicator.allgather` makes it so that every processor has a copy of the full array and `_communicator.gather` makes it so that only one of the processors has the full copy, the latter is typically used because outputting only happens on the root processor. See [libMesh::Parallel::Communicator](http://libmesh.github.io/doxygen/classlibMesh_1_1Parallel_1_1Communicator.html) for more communication options.
-
-!listing NearestPointTrainer.C re=void\sNearestPointTrainer::finalize.*?^}
+!listing NearestPointTrainer.C re=void\sNearestPointTrainer::postTrain.*?^}
 
 ## Creating a Surrogate
 
-This example will go over the creation of [NearestPointSurrogate](NearestPointSurrogate.md). [Surrogates](Surrogates/index.md) are a specialized version of a [GeneralUserObject.md] that must have the `evaluate` public member function. The `validParams` for a surrogate will generally define how the surrogate is evaluated. [NearestPointSurrogate.md] does not have any options for the method of evaluation.
+This example will go over the creation of [NearestPointSurrogate](NearestPointSurrogate.md). [Surrogates](Surrogates/index.md)  must have the `evaluate` public member function. The `validParams` for a surrogate will generally define how the surrogate is evaluated. [NearestPointSurrogate.md] does not have any options for the method of evaluation.
 
 ### Constructor
 

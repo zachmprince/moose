@@ -28,8 +28,9 @@ PolynomialChaos::PolynomialChaos(const InputParameters & parameters)
     _ncoeff(getModelData<std::size_t>("_ncoeff")),
     _tuple(getModelData<std::vector<std::vector<unsigned int>>>("_tuple")),
     _coeff(getModelData<std::vector<Real>>("_coeff")),
-    _poly(
-        getModelData<std::vector<std::unique_ptr<const PolynomialQuadrature::Polynomial>>>("_poly"))
+    _poly(getModelData<std::vector<std::unique_ptr<const PolynomialQuadrature::Polynomial>>>(
+        "_poly")),
+    _hatval(getModelData<std::vector<Real>>("_hatval"))
 {
 }
 

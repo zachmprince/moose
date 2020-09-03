@@ -9,37 +9,30 @@
 
 #pragma once
 
-#include "SurrogateTrainer.h"
+#include "SamplerTrainer.h"
 #include "PolynomialQuadrature.h"
 #include "QuadratureSampler.h"
 #include "MultiDimPolynomialGenerator.h"
 
 #include "Distribution.h"
 
-class PolynomialChaosTrainer : public SurrogateTrainer
+class PolynomialChaosTrainer : public SamplerTrainer
 {
 public:
   static InputParameters validParams();
   PolynomialChaosTrainer(const InputParameters & parameters);
   virtual void initialSetup() override;
-  virtual void initialize() override;
-  virtual void execute() override;
-  virtual void finalize() override;
+
+protected:
+  virtual void preTrain() override;
+  virtual void train() override;
+  virtual void postTrain() override;
 
 private:
   // TODO: Move as much of these to constructor initialization
 
-  /// Sampler from which the parameters were perturbed
-  Sampler * _sampler;
-
   /// QuadratureSampler pointer, necessary for applying quadrature weights
-  QuadratureSampler * _quad_sampler;
-
-  /// Vector postprocessor of the results from perturbing the model with _sampler
-  const VectorPostprocessorValue * _values_ptr = nullptr;
-
-  /// True when _sampler data is distributed
-  bool _values_distributed;
+  const QuadratureSampler * _quad_sampler = nullptr;
 
   // The following items are stored using declareModelData for use as a trained model.
 
@@ -60,4 +53,7 @@ private:
 
   /// The distributions used for sampling
   std::vector<std::unique_ptr<const PolynomialQuadrature::Polynomial>> & _poly;
+
+  /// Leverages
+  std::vector<Real> & _hatval;
 };

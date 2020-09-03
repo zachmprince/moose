@@ -69,7 +69,6 @@
     covariance_function = covar
     standardize_params = true
     standardize_data = true
-    distributions = 'uniform uniform uniform uniform uniform uniform'
     sampler = sample
     results_vpp = data
     results_vector = g_values

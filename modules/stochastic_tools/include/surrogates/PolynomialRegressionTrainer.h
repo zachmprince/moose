@@ -10,25 +10,21 @@
 #pragma once
 
 #include "libmesh/utility.h"
-#include "SurrogateTrainer.h"
+#include "SamplerTrainer.h"
 #include "MultiDimPolynomialGenerator.h"
 
-class PolynomialRegressionTrainer : public SurrogateTrainer
+class PolynomialRegressionTrainer : public SamplerTrainer
 {
 public:
   static InputParameters validParams();
 
   PolynomialRegressionTrainer(const InputParameters & parameters);
 
-  virtual void initialSetup() override;
-
-  virtual void initialize() override;
-
-  virtual void execute() override;
-
-  virtual void finalize() override;
-
 protected:
+  virtual void preTrain() override;
+  virtual void train() override;
+  virtual void postTrain() override;
+
   /// Coefficients of regression model
   std::vector<Real> & _coeff;
 
@@ -38,15 +34,15 @@ protected:
   /// Types for the polynomial regression
   const MooseEnum & _regression_type;
 
+  /// Leverages
+  std::vector<Real> & _hatval;
+
 private:
   /// Maximum polynomial degree, limiting the sum of constituent polynomial degrees.
   const unsigned int & _max_degree;
 
   /// The penalty parameter for Ridge regularization
   const Real & _penalty;
-
-  /// Number of dimensions.
-  unsigned int _n_dims;
 
   /// Number of terms in the polynomial expression.
   unsigned int _n_poly_terms;
@@ -57,12 +53,6 @@ private:
   DenseVector<Real> _rhs;
   ///@}
 
-  /// Sampler from which the parameters were perturbed
-  Sampler * _sampler = nullptr;
-
-  /// Vector postprocessor of the results from perturbing the model with _sampler
-  const VectorPostprocessorValue * _values_ptr = nullptr;
-
-  /// True when _sampler data is distributed
-  bool _values_distributed = false; // default to false; set in initialSetup
+  /// Local predictor matrix
+  std::vector<DenseVector<Real>> _x_full;
 };
