@@ -1,0 +1,51 @@
+[Tests]
+  design = 'LinearLOOCrossValidation.md  CrossValidatedRSME.md CrossValidation/index.md LeaveOneOut/index.md KFold/index.md'
+  issues = '#14834'
+
+  [cv_test]
+    requirement = "The system shall be able to compute cross validated root mean squared error of surrogate models using "
+
+    [loo]
+      type = CSVDiff
+      input = cv_loo.i
+      csvdiff = cv_loo_out.csv
+      allow_test_objects = true
+
+      detail = "leave-one-out method, "
+    []
+    [kfold]
+      type = CSVDiff
+      input = cv_kfold.i
+      csvdiff = cv_kfold_out.csv
+      allow_test_objects = true
+
+      detail = "k-fold method, "
+    []
+    [linear_loo]
+      type = CSVDiff
+      input = lloocv.i
+      csvdiff = lloocv_out.csv
+      allow_test_objects = true
+
+      detail = "leave-one-out method with leverages from linear models, "
+    []
+    [cv_pp]
+      type = CSVDiff
+      input = cv_pp.i
+      csvdiff = cv_pp_out.csv
+      allow_test_objects = true
+
+      detail = "and user defined train-test sets."
+    []
+  []
+
+  [error]
+    type = RunException
+    input = cv_kfold.i
+    cli_args = 'CrossValidation/KFold/kfold/num_rows=123'
+    expect_err = "Number of rows specified \(123\) does not match number of rows in sample \(200\)."
+    allow_test_objects = true
+
+    requirement = "The system shall error if user inputs wrong number of rows in cross validation action."
+  []
+[]

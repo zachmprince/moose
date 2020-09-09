@@ -109,9 +109,8 @@ PolynomialChaosTrainer::postTrain()
   gatherSum(_coeff);
 
   if (!_quad_sampler)
-  {
     for (std::size_t i = 0; i < _ncoeff; ++i)
       _coeff[i] /= getNumberOfPoints();
-    _communicator.allgather(_hatval);
-  }
+
+  _communicator.allgather(_hatval);
 }

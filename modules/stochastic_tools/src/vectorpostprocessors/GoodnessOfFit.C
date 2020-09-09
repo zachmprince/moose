@@ -65,7 +65,7 @@ GoodnessOfFit::GoodnessOfFit(const InputParameters & parameters)
   if (isParamValid("model"))
   {
     const auto & model_names = getParam<std::vector<UserObjectName>>("model");
-    _model.reserve(_num_models);
+    _model.reserve(model_names.size());
     for (const auto & nm : model_names)
       _model.push_back(&getSurrogateModelByName(nm));
   }
@@ -270,7 +270,7 @@ GoodnessOfFit::isSSTNeeded() const
 bool
 GoodnessOfFit::isSSENeeded() const
 {
-  if (_gof.contains("rsme"))
+  if (_gof.contains("rmse"))
     return true;
   else if (_gof.contains("rsquared"))
     return true;

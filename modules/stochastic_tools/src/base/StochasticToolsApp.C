@@ -73,6 +73,10 @@ StochasticToolsApp::registerAll(Factory & f, ActionFactory & af, Syntax & syntax
   // Adds action for loading Covariance data in model
   registerTask("load_covariance_data", true);
   addTaskDependency("load_covariance_data", "load_surrogate_data");
+
+  // Cross Validation
+  registerSyntax("LeaveOneOut", "CrossValidation/LeaveOneOut/*");
+  registerSyntax("KFold", "CrossValidation/KFold/*");
 }
 
 void

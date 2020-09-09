@@ -31,6 +31,12 @@
       Registry::addAction<classname>(                                                              \
           {app, #classname, "", task, nullptr, nullptr, nullptr, __FILE__, __LINE__, "", ""})
 
+/// Same as registerMooseAction above, but allows multiple registrations on one line
+#define registerMooseActionCombined(app, classname, task, number)                                  \
+  static char combineNames(dummyvar_for_registering_action_##classname, __LINE___##number) =       \
+      Registry::addAction<classname>(                                                              \
+          {app, #classname, "", task, nullptr, nullptr, nullptr, __FILE__, __LINE__, "", ""})
+
 /// Add a MooseObject to the registry with the given app name/label.  classname is the (unquoted)
 /// c++ class.  Each object/class should only be registered once.
 #define registerMooseObject(app, classname)                                                        \

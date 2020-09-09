@@ -98,7 +98,7 @@ LinearLOOCrossValidation::execute()
     {
       Real val = _pc_model->evaluate(_sampler.getNextLocalRow());
       Real hatval = _pc_model->getLeverage(i);
-      Real res = (1.0 - hatval) * (*_data)[i - offset] - val;
+      Real res = (1.0 + hatval) * (*_data)[i - offset] - val;
       _rsme += res * res;
     }
   }
