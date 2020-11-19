@@ -19,18 +19,6 @@
                     "type": "unsigned int",
                     "value": 0,
                     "value_name": "num_picard_iterations"
-                },
-                {
-                    "object_name": "iteration_info",
-                    "type": "double",
-                    "value": 0.0,
-                    "value_name": "time"
-                },
-                {
-                    "object_name": "iteration_info",
-                    "type": "unsigned int",
-                    "value": 0,
-                    "value_name": "timestep"
                 }
             ],
             "time": 0.0,
@@ -55,18 +43,6 @@
                     "type": "unsigned int",
                     "value": 1,
                     "value_name": "num_picard_iterations"
-                },
-                {
-                    "object_name": "iteration_info",
-                    "type": "double",
-                    "value": 1.0,
-                    "value_name": "time"
-                },
-                {
-                    "object_name": "iteration_info",
-                    "type": "unsigned int",
-                    "value": 1,
-                    "value_name": "timestep"
                 }
             ],
             "time": 1.0,
@@ -91,18 +67,6 @@
                     "type": "unsigned int",
                     "value": 1,
                     "value_name": "num_picard_iterations"
-                },
-                {
-                    "object_name": "iteration_info",
-                    "type": "double",
-                    "value": 2.0,
-                    "value_name": "time"
-                },
-                {
-                    "object_name": "iteration_info",
-                    "type": "unsigned int",
-                    "value": 2,
-                    "value_name": "timestep"
                 }
             ],
             "time": 2.0,
@@ -127,18 +91,6 @@
                     "type": "unsigned int",
                     "value": 1,
                     "value_name": "num_picard_iterations"
-                },
-                {
-                    "object_name": "iteration_info",
-                    "type": "double",
-                    "value": 3.0,
-                    "value_name": "time"
-                },
-                {
-                    "object_name": "iteration_info",
-                    "type": "unsigned int",
-                    "value": 3,
-                    "value_name": "timestep"
                 }
             ],
             "time": 3.0,

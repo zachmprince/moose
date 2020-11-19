@@ -17,42 +17,41 @@ InputParameters
 IterationInfo::validParams()
 {
   InputParameters params = GeneralReporter::validParams();
-  params.addClassDescription("Report the time and iteration information for the simulation.");
+  params.addClassDescription("Report iteration information for the simulation.");
 
-  MultiMooseEnum items(
-      "time timestep num_linear_iterations num_nonlinear_iterations num_picard_iterations");
+  MultiMooseEnum items("num_linear_iterations num_nonlinear_iterations num_picard_iterations");
   params.addParam<MultiMooseEnum>(
       "items",
       items,
       "The iteration information to output, if nothing is provided everything will be output.");
+
+  params.set<ExecFlagEnum>("execute_on") = {EXEC_TIMESTEP_END};
+  params.suppressParameter<ExecFlagEnum>("execute_on");
   return params;
 }
 
 IterationInfo::IterationInfo(const InputParameters & parameters)
   : GeneralReporter(parameters),
-    _transient_executioner(dynamic_cast<Transient *>(_app.getExecutioner())),
+    _picard_solve(_app.getExecutioner()->picardSolve()),
     _items(getParam<MultiMooseEnum>("items")),
-    _time_value(declareHelper<Real>("time", _dummy_real)),
-    _time_step_value(declareHelper<unsigned int>("timestep", _dummy_unsigned_int)),
     _num_linear(declareHelper<unsigned int>("num_linear_iterations", _dummy_unsigned_int)),
     _num_nonlinear(declareHelper<unsigned int>("num_nonlinear_iterations", _dummy_unsigned_int)),
-    _num_picard(declareHelper<unsigned int>(
-        "num_picard_iterations", _dummy_unsigned_int, _transient_executioner != nullptr))
+    _num_picard(declareHelper<unsigned int>("num_picard_iterations", _dummy_unsigned_int))
 {
-  if (_transient_executioner == nullptr && _items.contains("num_picard_iterations"))
-    paramError("items",
-               "The number of picard iterations was requested but the executioner is not of type "
-               "Transient, "
-               "the picard iteration count is only available for Transient Executioner objects.");
 }
 
 void
 IterationInfo::execute()
 {
-  _time_value = _t;
-  _time_step_value = _t_step;
-  _num_nonlinear = _subproblem.nNonlinearIterations();
-  _num_linear = _subproblem.nLinearIterations();
-  if (_transient_executioner)
-    _num_picard = _transient_executioner->picardSolve().numPicardIts();
+  _num_picard = _picard_solve.numPicardIts();
+  if (_num_picard == 1)
+  {
+    _num_nonlinear = _subproblem.nNonlinearIterations();
+    _num_linear = _subproblem.nLinearIterations();
+  }
+  else
+  {
+    _num_nonlinear += _subproblem.nNonlinearIterations();
+    _num_linear += _subproblem.nLinearIterations();
+  }
 }

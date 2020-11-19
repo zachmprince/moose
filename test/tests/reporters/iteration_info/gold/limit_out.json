@@ -4,9 +4,15 @@
             "reporters": [
                 {
                     "object_name": "iteration_info",
-                    "type": "double",
-                    "value": 0.0,
-                    "value_name": "time"
+                    "type": "unsigned int",
+                    "value": 0,
+                    "value_name": "num_linear_iterations"
+                },
+                {
+                    "object_name": "iteration_info",
+                    "type": "unsigned int",
+                    "value": 0,
+                    "value_name": "num_nonlinear_iterations"
                 }
             ],
             "time": 0.0,
@@ -16,9 +22,15 @@
             "reporters": [
                 {
                     "object_name": "iteration_info",
-                    "type": "double",
-                    "value": 1.0,
-                    "value_name": "time"
+                    "type": "unsigned int",
+                    "value": 1,
+                    "value_name": "num_linear_iterations"
+                },
+                {
+                    "object_name": "iteration_info",
+                    "type": "unsigned int",
+                    "value": 1,
+                    "value_name": "num_nonlinear_iterations"
                 }
             ],
             "time": 1.0,
@@ -28,9 +40,15 @@
             "reporters": [
                 {
                     "object_name": "iteration_info",
-                    "type": "double",
-                    "value": 2.0,
-                    "value_name": "time"
+                    "type": "unsigned int",
+                    "value": 1,
+                    "value_name": "num_linear_iterations"
+                },
+                {
+                    "object_name": "iteration_info",
+                    "type": "unsigned int",
+                    "value": 1,
+                    "value_name": "num_nonlinear_iterations"
                 }
             ],
             "time": 2.0,
@@ -40,9 +58,15 @@
             "reporters": [
                 {
                     "object_name": "iteration_info",
-                    "type": "double",
-                    "value": 3.0,
-                    "value_name": "time"
+                    "type": "unsigned int",
+                    "value": 1,
+                    "value_name": "num_linear_iterations"
+                },
+                {
+                    "object_name": "iteration_info",
+                    "type": "unsigned int",
+                    "value": 1,
+                    "value_name": "num_nonlinear_iterations"
                 }
             ],
             "time": 3.0,

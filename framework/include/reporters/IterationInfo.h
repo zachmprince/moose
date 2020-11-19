@@ -10,7 +10,7 @@
 #pragma once
 
 #include "GeneralReporter.h"
-class Transient;
+class PicardSolve;
 
 /**
  * Report the time and iteration information for the simulation.
@@ -25,12 +25,10 @@ public:
   virtual void execute() override;
 
 protected:
-  Transient * _transient_executioner = nullptr;
+  const PicardSolve & _picard_solve;
   const MultiMooseEnum & _items;
 
   // Reporter values to return (all are computed as "replicated" values)
-  Real & _time_value;
-  unsigned int & _time_step_value;
   unsigned int & _num_linear;
   unsigned int & _num_nonlinear;
   unsigned int & _num_picard;
