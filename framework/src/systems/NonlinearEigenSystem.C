@@ -239,6 +239,13 @@ NonlinearEigenSystem::solve()
   else
     system().solve();
 
+  // Get number of iterations
+  SlepcEigenSolver<Number> * solver =
+      libmesh_cast_ptr<SlepcEigenSolver<Number> *>(&(*_transient_sys.eigen_solver));
+  if (solver && _eigen_problem.isNonlinearEigenvalueSolver())
+    Moose::SlepcSupport::EPSGetNonlinearAndLinearIterations(
+        solver->eps(), _n_iters, _n_linear_iters);
+
   // store eigenvalues
   unsigned int n_converged_eigenvalues = getNumConvergedEigenvalues();
 

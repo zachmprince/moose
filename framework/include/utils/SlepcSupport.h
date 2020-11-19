@@ -209,6 +209,13 @@ PetscErrorCode PCApply_MoosePC(PC pc, Vec x, Vec y);
  */
 PetscErrorCode PCSetUp_MoosePC(PC pc);
 
+/**
+ * Get number of nonlinear and linear iterations
+ */
+PetscErrorCode EPSGetNonlinearAndLinearIterations(EPS eps,
+                                                  unsigned int & nonlinear_iterations,
+                                                  unsigned int & linear_iterations);
+
 } // namespace SlepcSupport
 } // namespace moose
 

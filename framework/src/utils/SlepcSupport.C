@@ -1112,7 +1112,40 @@ mooseSlepcEPSMonitor(EPS eps,
 
   // The term "k-eigenvalue" is adopted from the neutronics community.
   console << " Iteration " << its << std::setprecision(10) << std::fixed
-          << (inverse ? " k-eigenvalue = " : " eigenvalue = ") << eigenvalue << std::endl;
+          << (inverse ? " k-eigenvalue = " : " eigenvalue = ") << eigenvalue << "\n\n";
+
+  if (eigen_problem->doFreePowerIteration())
+  {
+    unsigned int niter;
+    unsigned int nliter;
+    ierr = EPSGetNonlinearAndLinearIterations(eps, niter, nliter);
+    LIBMESH_CHKERR(ierr);
+    eigen_problem->addPowerNIterations(niter, nliter);
+  }
+
+  return 0;
+}
+
+PetscErrorCode
+EPSGetNonlinearAndLinearIterations(EPS eps,
+                                   unsigned int & nonlinear_iterations,
+                                   unsigned int & linear_iterations)
+{
+  PetscErrorCode ierr;
+  PetscInt niter;
+  PetscInt nliter;
+
+  SNES snes = nullptr;
+  ierr = mooseSlepcEPSGetSNES(eps, &snes);
+  LIBMESH_CHKERR(ierr);
+
+  ierr = SNESGetIterationNumber(snes, &niter);
+  LIBMESH_CHKERR(ierr);
+  ierr = SNESGetLinearSolveIterations(snes, &nliter);
+  LIBMESH_CHKERR(ierr);
+
+  nonlinear_iterations = static_cast<unsigned int>(niter);
+  linear_iterations = static_cast<unsigned int>(nliter);
 
   return 0;
 }

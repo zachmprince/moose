@@ -66,7 +66,9 @@ EigenProblem::EigenProblem(const InputParameters & parameters)
     _compute_jacobian_blocks_timer(registerTimedSection("computeJacobianBlocks", 3)),
     _has_normalization(false),
     _normal_factor(1.0),
-    _first_solve(declareRestartableData<bool>("first_solve", true))
+    _first_solve(declareRestartableData<bool>("first_solve", true)),
+    _n_power_iters(0),
+    _n_power_linear_iters(0)
 {
 #ifdef LIBMESH_HAVE_SLEPC
   _nl = _nl_eigen;
@@ -510,6 +512,9 @@ EigenProblem::solve()
     if (isNonlinearEigenvalueSolver() &&
         solverParams()._eigen_solve_type != Moose::EST_NONLINEAR_POWER)
     {
+      _n_power_iters = 0;
+      _n_power_linear_iters = 0;
+
       // Let do an initial solve if a nonlinear eigen solver but not power is used.
       // The initial solver is a Inverse Power, and it is used to compute a good initial
       // guess for Newton
@@ -594,6 +599,25 @@ void
 EigenProblem::initPetscOutput()
 {
   _app.getOutputWarehouse().solveSetup();
+}
+
+void
+EigenProblem::addPowerNIterations(unsigned int nonlinear_iterations, unsigned int linear_iterations)
+{
+  _n_power_iters += nonlinear_iterations;
+  _n_power_linear_iters += linear_iterations;
+}
+
+unsigned int
+EigenProblem::nNonlinearIterations() const
+{
+  return _nl->nNonlinearIterations() + _n_power_iters;
+}
+
+unsigned int
+EigenProblem::nLinearIterations() const
+{
+  return _nl->nLinearIterations() + _n_power_linear_iters;
 }
 
 #endif

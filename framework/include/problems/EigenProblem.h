@@ -183,6 +183,18 @@ public:
    */
   void outputInverseEigenvalue(bool inverse) { _output_inverse_eigenvalue = inverse; }
 
+  /**
+   * Add to number of nonlinear and linear iterations for moditor
+   * See Moose::SlepcSupport::mooseSlepcEPSMonitor
+   */
+  void addPowerNIterations(unsigned int nonlinear_iterations, unsigned int linear_iterations);
+
+  /**
+   * Need to override these to include free power iterations
+   */
+  virtual unsigned int nNonlinearIterations() const override;
+  virtual unsigned int nLinearIterations() const override;
+
 private:
   /**
    * Do some free/extra power iterations
@@ -229,4 +241,8 @@ protected:
   Real _normal_factor;
   /// A flag to indicate if it is the first time of calling solve
   bool & _first_solve;
+
+  /// Number of nonlinear and linear iterations from power iterations
+  unsigned int _n_power_iters;
+  unsigned int _n_power_linear_iters;
 };
