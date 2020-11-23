@@ -790,6 +790,22 @@ struct IsLikeReal<DualReal>
 };
 
 /**
+ * Custom type trait that has a ::value of true for types that can be broadcasted
+ */
+template <typename T>
+struct CanBroadcast
+{
+  static constexpr bool value =
+      std::is_fundamental<T>::value || std::is_same<T, std::string>::value;
+};
+template <typename T>
+struct CanBroadcast<std::vector<T>>
+{
+  static constexpr bool value =
+      std::is_fundamental<T>::value || std::is_same<T, std::string>::value;
+};
+
+/**
  * Construct a valid bounding box from 2 arbitrary points
  *
  * If you have 2 points in space and you wish to construct a bounding box, you should use
