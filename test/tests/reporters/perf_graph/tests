@@ -1,0 +1,24 @@
+[Tests]
+  requirement = "MOOSE shall have the ability to output a detailed performance log to JSON "
+  design = 'PerfGraphReporter.md'
+  issues = '#16256'
+
+  [root]
+    type = CheckFiles
+    input = 'perf_graph.i'
+    check_files = 'perf_graph_out.json'
+
+    detail = "for just root process "
+  []
+
+  [distributed]
+    type = CheckFiles
+    input = 'perf_graph.i'
+    cli_args = 'Reporters/perf_graph/all_processes=true Outputs/file_base=perf_graph_dist_out'
+    check_files = 'perf_graph_dist_out.json perf_graph_dist_out.json.1 perf_graph_dist_out.json.2 perf_graph_dist_out.json.3'
+    min_parallel = 4
+    max_parallel = 4
+
+    detail = "and for all processes."
+  []
+[]
