@@ -12,6 +12,7 @@
 // MOOSE Includes
 #include "PerfGuard.h"
 #include "MooseError.h"
+#include "MooseUtils.h"
 
 // Note: do everything we can to make sure this only gets #included
 // in the .C file... this is a heavily templated header that we
@@ -276,6 +277,55 @@ PerfGraph::recursivelyPrintGraph(PerfNode * current_node,
 }
 
 void
+PerfGraph::recursivelyPrintGraph(PerfNode * current_node, nlohmann::json & json, unsigned int level)
+{
+  mooseAssert(_id_to_section_name.find(current_node->id()) != _id_to_section_name.end(),
+              "Unable to find section name!");
+
+  auto & name = current_node->id() == 0 ? _root_name : _id_to_section_name[current_node->id()];
+
+  mooseAssert(_id_to_level.find(current_node->id()) != _id_to_level.end(), "Unable to find level!");
+  auto & node_level = _id_to_level[current_node->id()];
+
+  if (node_level <= level)
+  {
+    mooseAssert(!_section_time_ptrs.empty(),
+                "updateTiming() must be run before recursivelyPrintGraph!");
+
+    // Save off for convenience
+    auto total_root_time = _section_time_ptrs[0]->_total;
+    auto ncalls = static_cast<Real>(current_node->numCalls());
+    auto self = std::chrono::duration<double>(current_node->selfTime()).count();
+    auto total = std::chrono::duration<double>(current_node->totalTime()).count();
+
+    json["name"] = name;
+    json["level"] = node_level;
+    json["calls"] = current_node->numCalls();
+
+    json["self"] = self;
+    json["self_avg"] = self / ncalls;
+    json["self_percent"] = 100. * self / total_root_time;
+
+    json["total"] = total;
+    json["total_avg"] = total / ncalls;
+    json["total_percent"] = 100. * total / total_root_time;
+  }
+
+  unsigned int num_child = current_node->children().size();
+  json["num_children"] = num_child;
+
+  unsigned int i = 0;
+  for (auto & child_it : current_node->children())
+  {
+    std::ostringstream section;
+    section << "child_";
+    section << std::setw(MooseUtils::numDigits(num_child)) << std::setfill('0') << i++;
+    auto & child_node = json[section.str()];
+    recursivelyPrintGraph(child_it.second.get(), child_node, level);
+  }
+}
+
+void
 PerfGraph::recursivelyPrintHeaviestGraph(PerfNode * current_node,
                                          FullTable & vtable,
                                          unsigned int current_depth)
@@ -368,6 +418,22 @@ PerfGraph::print(const ConsoleStream & console, unsigned int level)
 
   recursivelyPrintGraph(_root_node.get(), vtable, level);
   vtable.print(console);
+}
+
+void
+PerfGraph::print(nlohmann::json & json)
+{
+  updateTiming();
+
+  // Printing full tree
+  unsigned int max_level = std::max_element(_id_to_level.begin(),
+                                            _id_to_level.end(),
+                                            [](const std::pair<PerfID, unsigned int> & a,
+                                               const std::pair<PerfID, unsigned int> & b) {
+                                              return a.second < b.second;
+                                            })
+                               ->second;
+  recursivelyPrintGraph(_root_node.get(), json, max_level);
 }
 
 void

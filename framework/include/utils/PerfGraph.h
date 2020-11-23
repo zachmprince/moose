@@ -15,6 +15,7 @@
 #include "IndirectSort.h"
 #include "ConsoleStream.h"
 #include "MooseError.h"
+#include "nlohmann/json.h"
 
 // System Includes
 #include <array>
@@ -68,12 +69,19 @@ public:
   PerfID registerSection(const std::string & section_name, unsigned int level);
 
   /**
-   * Print the tree out
+   * Print the tree out to stream
    *
    * @param console The output stream to output to
    * @param level The log level, the higher the number the more output you get
    */
   void print(const ConsoleStream & console, unsigned int level);
+
+  /**
+   * Print the tree out to json
+   *
+   * @param json The json node to output to
+   */
+  void print(nlohmann::json & json);
 
   /**
    * Print out the heaviest branch through the tree
@@ -211,6 +219,15 @@ protected:
                              unsigned int current_depth = 0);
 
   /**
+   * Helper for printing out the graph to json
+   *
+   * @param current_node The node to be working on right now
+   * @param json JSON node to output to
+   * @param level The level to print out below
+   */
+  void recursivelyPrintGraph(PerfNode * current_node, nlohmann::json & json, unsigned int level);
+
+  /**
    * Helper for printing out the trace that has taken the most time
    *
    * @param current_node The node to be working on right now
@@ -229,13 +246,6 @@ protected:
    * @param current_node The current node to work on
    */
   void recursivelyFillTime(PerfNode * current_node);
-
-  /**
-   * Helper for printing out the heaviest sections
-   *
-   * @param console Where to print to
-   */
-  void printHeaviestSections(const ConsoleStream & console);
 
   /// The name (handle) of the root node
   static const std::string ROOT_NAME;
