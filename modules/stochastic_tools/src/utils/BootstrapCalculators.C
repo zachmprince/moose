@@ -10,7 +10,7 @@
 
 #include "Calculators.h"
 #include "BootstrapCalculators.h"
-#include "shuffle.h"
+#include "Shuffle.h"
 #include "MooseEnumItem.h"
 #include "MooseEnum.h"
 #include "MooseError.h"
@@ -84,8 +84,7 @@ BootstrapCalculator::resample(const std::vector<Real> & data,
                               MooseRandom & generator,
                               const bool is_distributed) const
 {
-  return StochasticTools::resample<Real>(
-      data, generator, 0, is_distributed ? &_communicator : nullptr);
+  return MooseUtils::resample<Real>(data, generator, 0, is_distributed ? &_communicator : nullptr);
 }
 
 // PERCENTILE //////////////////////////////////////////////////////////////////////////////////////
