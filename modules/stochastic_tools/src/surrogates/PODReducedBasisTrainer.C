@@ -111,11 +111,14 @@ PODReducedBasisTrainer::execute()
   // operators.
   if (!_base_completed)
   {
-    computeCorrelationMatrix();
-    computeEigenDecomposition();
+    if (getParam<bool>("use_slepc_solver"))
+      slepcCompute();
+    else
+    {
+      computeCorrelationMatrix();
+      computeEigenDecomposition();
+    }
     computeBasisVectors();
-    slepcCompute();
-
     initReducedOperators();
     _base_completed = true;
     _empty_operators = true;
@@ -601,6 +604,14 @@ PODReducedBasisTrainer::printEigenvalues()
       _eigenvalues[var_i].print_scientific(os);
     }
   }
+
+  for (unsigned int var_i = 0; var_i < _var_names.size(); ++var_i)
+  {
+    std::cout << _var_names[var_i] << " singular values:" << std::endl;
+    _eigenvalues[var_i].print_scientific(std::cout);
+    std::cout << _var_names[var_i] << " basis vectors:" << std::endl;
+    _eigenvectors[var_i].print_scientific(std::cout);
+  }
 }
 
 void
@@ -610,63 +621,64 @@ PODReducedBasisTrainer::slepcCompute()
   {
     auto & snapshot = _snapshots[var_i];
 
+    // Build matrix
     Mat smat;
-    PetscInt glob_rows = snapshot.getNumberOfGlobalEntries();
+    const PetscInt glob_rows = snapshot.getNumberOfGlobalEntries();
     PetscInt glob_cols = snapshot.getNumberOfLocalEntries() > 0 ? snapshot.getLocalEntry(0)->size() : 0;
     _communicator.max(glob_cols);
-    PetscInt loc_rows = snapshot.getNumberOfLocalEntries();
+    const PetscInt loc_rows = snapshot.getNumberOfLocalEntries();
+    const PetscInt lrow_begin = loc_rows > 0 ? snapshot.getGlobalIndex(0) : 0;
+    const PetscInt lrow_end = lrow_begin + loc_rows;
     MatCreateDense(_communicator.get(), loc_rows, glob_cols, glob_rows, glob_cols, NULL, &smat);
-    PetscInt row = loc_rows > 0 ? snapshot.getGlobalIndex(0) : 0;
-    for (const auto & vec : snapshot.getLocalEntries())
-    {
-      for (PetscInt col = 0; col < vec->size(); ++col)
-      {
-        // std::cerr << "processor " << processor_id() << ", row = " << row << ", col = " << col << std::endl;
-        MatSetValue(smat, row, col, (*vec)(col), INSERT_VALUES);
-      }
-      ++row;
-    }
+    for (unsigned int row = lrow_begin; row < lrow_end; ++row)
+      for (PetscInt col = 0; col < snapshot.getGlobalEntry(row)->size(); ++col)
+        MatSetValue(smat, row, col, (*snapshot.getGlobalEntry(row))(col), INSERT_VALUES);
     MatAssemblyBegin(smat, MAT_FINAL_ASSEMBLY);
     MatAssemblyEnd(smat, MAT_FINAL_ASSEMBLY);
-    PetscInt Istart, Iend;
-    MatGetOwnershipRange(smat ,&Istart, &Iend);
-    std::cerr << "processor " << processor_id() << ", Istart = " << Istart << ", Iend = " << Iend - 1 << std::endl;
-    // MatTranspose(smat, MAT_INPLACE_MATRIX, &smat);
-    MatView(smat, PETSC_VIEWER_STDOUT_WORLD);
 
-
-    Mat tmp;
-    MatCreateDense(_communicator.get(), PETSC_DECIDE, PETSC, glob_rows, glob_cols, NULL, &smat);
-
-
+    // Setup SVD and solve
     SVD svd;
     PetscInt nconv;
     SVDCreate(_communicator.get(), &svd);
     SVDSetOperators(svd, smat, NULL);
-    SVDSetImplicitTranspose(svd, 1);
+    SVDSetType(svd, SVDSCALAPACK);
     SVDSetFromOptions(svd);
     SVDSolve(svd);
     SVDGetConverged(svd, &nconv);
-    //
-    // std::vector<Real> sig2(nconv);
-    // std::vector<std::vector<Real>> uu(nconv, std::vector<Real>(glob_rows));
-    // std::vector<size_t> ind(loc_rows);
-    // Vec u;
-    // PetscReal sigma;
-    // MatCreateVecs(smat, NULL, &u);
-    // for (unsigned int i = 0; i < nconv; ++i)
-    // {
-    //   SVDGetSingularTriplet(svd, i, &sigma, u, NULL);
-    //   sig2[i] = sigma * sigma;
-    //   PetscVector<Real> uvec(u, _communicator);
-    //   // uvec.localize(uu[i]);
-    //   std::cout << "sigma^2 = " << sig2[i] << std::endl;
-    //   std::cout << "u = " << std::endl;
-    //   uvec.print();
-    // }
 
+    // Collect results in a orderly fashion
+    std::vector<Real> sig2(nconv);
+    std::vector<std::vector<Real>> uu(nconv, std::vector<Real>(loc_rows));
+    PetscReal sigma;
+    PetscVector<Real> u(_communicator, glob_rows, loc_rows);
+    for (unsigned int i = 0; i < nconv; ++i)
+    {
+      SVDGetSingularTriplet(svd, i, &sigma, u.vec(), NULL);
+      sig2[i] = sigma * sigma;
+      auto uarr = u.get_array_read();
+      std::copy(uarr, uarr + loc_rows, uu[i].begin());
+      u.restore_array();
+    }
+
+    // Don't need petsc object anymore
     MatDestroy(&smat);
     SVDDestroy(&svd);
-    // VecDestroy(&u);
+
+    // Sort singular values, determine error cutoff, and put values and vectors in member variables
+    std::vector<size_t> ind;
+    Moose::indirectSort(sig2.begin(), sig2.end(), ind, std::greater<Real>());
+    Moose::applyIndices(sig2, ind);
+    unsigned int cutoff = determineNumberOfModes(_error_res[var_i], sig2);
+    _eigenvalues[var_i].resize(cutoff);
+    _eigenvectors[var_i].resize(glob_rows, cutoff);
+    for (unsigned int j = 0; j < cutoff; ++j)
+    {
+      _eigenvalues[var_i](j) = sig2[j];
+      for (unsigned int k = 0; k < glob_rows; ++k)
+        _eigenvectors[var_i](k, j) = uu[ind[j]][k];
+    }
+    _communicator.sum(_eigenvectors[var_i].get_values());
   }
+
+  printEigenvalues();
 }
