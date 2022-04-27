@@ -148,4 +148,6 @@ private:
       processor_id_type /*pid*/,
       const std::vector<
           std::tuple<unsigned int, unsigned int, std::shared_ptr<DenseVector<Real>>>> & vectors);
+
+  void slepcCompute();
 };

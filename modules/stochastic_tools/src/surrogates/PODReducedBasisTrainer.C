@@ -15,6 +15,8 @@
 #include "libmesh/parallel_sync.h"
 #include "VectorPacker.h"
 
+#include <slepcsvd.h>
+
 registerMooseObject("StochasticToolsApp", PODReducedBasisTrainer);
 
 InputParameters
@@ -38,6 +40,7 @@ PODReducedBasisTrainer::validParams()
       "tag_types",
       "List of keywords describing if the tags"
       " correspond to independent operatos or not. (op/op_dir/src/src_dir)");
+  params.addParam<bool>("use_slepc_solver", false, "");
   return params;
 }
 
@@ -111,6 +114,8 @@ PODReducedBasisTrainer::execute()
     computeCorrelationMatrix();
     computeEigenDecomposition();
     computeBasisVectors();
+    slepcCompute();
+
     initReducedOperators();
     _base_completed = true;
     _empty_operators = true;
@@ -595,5 +600,73 @@ PODReducedBasisTrainer::printEigenvalues()
       os << "evs" << std::endl;
       _eigenvalues[var_i].print_scientific(os);
     }
+  }
+}
+
+void
+PODReducedBasisTrainer::slepcCompute()
+{
+  for (unsigned int var_i = 0; var_i < _snapshots.size(); ++var_i)
+  {
+    auto & snapshot = _snapshots[var_i];
+
+    Mat smat;
+    PetscInt glob_rows = snapshot.getNumberOfGlobalEntries();
+    PetscInt glob_cols = snapshot.getNumberOfLocalEntries() > 0 ? snapshot.getLocalEntry(0)->size() : 0;
+    _communicator.max(glob_cols);
+    PetscInt loc_rows = snapshot.getNumberOfLocalEntries();
+    MatCreateDense(_communicator.get(), loc_rows, glob_cols, glob_rows, glob_cols, NULL, &smat);
+    PetscInt row = loc_rows > 0 ? snapshot.getGlobalIndex(0) : 0;
+    for (const auto & vec : snapshot.getLocalEntries())
+    {
+      for (PetscInt col = 0; col < vec->size(); ++col)
+      {
+        // std::cerr << "processor " << processor_id() << ", row = " << row << ", col = " << col << std::endl;
+        MatSetValue(smat, row, col, (*vec)(col), INSERT_VALUES);
+      }
+      ++row;
+    }
+    MatAssemblyBegin(smat, MAT_FINAL_ASSEMBLY);
+    MatAssemblyEnd(smat, MAT_FINAL_ASSEMBLY);
+    PetscInt Istart, Iend;
+    MatGetOwnershipRange(smat ,&Istart, &Iend);
+    std::cerr << "processor " << processor_id() << ", Istart = " << Istart << ", Iend = " << Iend - 1 << std::endl;
+    // MatTranspose(smat, MAT_INPLACE_MATRIX, &smat);
+    MatView(smat, PETSC_VIEWER_STDOUT_WORLD);
+
+
+    Mat tmp;
+    MatCreateDense(_communicator.get(), PETSC_DECIDE, PETSC, glob_rows, glob_cols, NULL, &smat);
+
+
+    SVD svd;
+    PetscInt nconv;
+    SVDCreate(_communicator.get(), &svd);
+    SVDSetOperators(svd, smat, NULL);
+    SVDSetImplicitTranspose(svd, 1);
+    SVDSetFromOptions(svd);
+    SVDSolve(svd);
+    SVDGetConverged(svd, &nconv);
+    //
+    // std::vector<Real> sig2(nconv);
+    // std::vector<std::vector<Real>> uu(nconv, std::vector<Real>(glob_rows));
+    // std::vector<size_t> ind(loc_rows);
+    // Vec u;
+    // PetscReal sigma;
+    // MatCreateVecs(smat, NULL, &u);
+    // for (unsigned int i = 0; i < nconv; ++i)
+    // {
+    //   SVDGetSingularTriplet(svd, i, &sigma, u, NULL);
+    //   sig2[i] = sigma * sigma;
+    //   PetscVector<Real> uvec(u, _communicator);
+    //   // uvec.localize(uu[i]);
+    //   std::cout << "sigma^2 = " << sig2[i] << std::endl;
+    //   std::cout << "u = " << std::endl;
+    //   uvec.print();
+    // }
+
+    MatDestroy(&smat);
+    SVDDestroy(&svd);
+    // VecDestroy(&u);
   }
 }
