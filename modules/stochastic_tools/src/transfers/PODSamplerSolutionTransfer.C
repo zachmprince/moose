@@ -87,6 +87,9 @@ PODSamplerSolutionTransfer::execute()
           std::shared_ptr<DenseVector<Real>> tmp = std::make_shared<DenseVector<Real>>();
           solution.get(var_dofs, tmp->get_values());
 
+          if (i == _sampler_ptr->getLocalRowBegin())
+            _trainer.snapshotMatrixSize(v_index, _sampler_ptr->getNumberOfRows(), _sampler_ptr->getNumberOfLocalRows(), tmp->size());
+
           // Copying the temporary vector into the trainer.
           _trainer.addSnapshot(v_index, i, tmp);
         }
@@ -170,6 +173,9 @@ PODSamplerSolutionTransfer::executeFromMultiapp()
           // Initializing a temporary vector for the partial solution.
           std::shared_ptr<DenseVector<Real>> tmp = std::make_shared<DenseVector<Real>>();
           solution.get(var_dofs, tmp->get_values());
+
+          if (i == 0)
+            _trainer.snapshotMatrixSize(var_i, getFromMultiApp()->numGlobalApps(), getFromMultiApp()->numLocalApps(), tmp->size());
 
           // Copying the temporary vector into the trainer.
           _trainer.addSnapshot(var_i, _global_index, tmp);

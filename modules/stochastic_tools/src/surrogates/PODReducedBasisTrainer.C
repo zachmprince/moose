@@ -87,6 +87,13 @@ PODReducedBasisTrainer::initialSetup()
   // Initializing the containers for the essential data to construct the
   // reduced operators.
 
+  if (getParam<bool>("use_slepc_solver"))
+  {
+    _snapshots2.clear();
+    _snapshots2.resize(_var_names.size());
+    for (auto & s : _snapshots2)
+      s = std::make_unique<StochasticTools::SnapshotMatrix>(_communicator);
+  }
   _snapshots.clear();
   _snapshots.resize(_var_names.size(), DistributedSnapshots(_communicator));
 
@@ -139,11 +146,21 @@ PODReducedBasisTrainer::finalize()
 }
 
 void
+PODReducedBasisTrainer::snapshotMatrixSize(unsigned int var_i, dof_id_type num_snapshots, dof_id_type num_snapshots_local, dof_id_type snapshot_size)
+{
+  if (getParam<bool>("use_slepc_solver"))
+    _snapshots2[var_i]->init(num_snapshots_local, num_snapshots, snapshot_size);
+}
+
+void
 PODReducedBasisTrainer::addSnapshot(unsigned int var_i,
                                     unsigned int glob_i,
                                     const std::shared_ptr<DenseVector<Real>> & snapshot)
 {
+  if (getParam<bool>("use_slepc_solver"))
+    _snapshots2[var_i]->addSnapshot(snapshot->get_values(), glob_i, false);
   _snapshots[var_i].addNewEntry(glob_i, snapshot);
+
 }
 
 void
@@ -457,6 +474,7 @@ PODReducedBasisTrainer::computeBasisVectors()
     unsigned int no_snaps = _snapshots[var_i].getNumberOfLocalEntries();
 
     _base[var_i].resize(no_bases);
+    DenseMatrix<Real> base2(_snapshots[var_i].getLocalEntry(0)->size(), no_bases);
 
     // Filling the containers using the local snapshots and the eigenvalues and
     // eigenvectors of the correlation matrices.
@@ -472,6 +490,7 @@ PODReducedBasisTrainer::computeBasisVectors()
         for (unsigned int i = 0; i < _base[var_i][base_i].size(); ++i)
         {
           _base[var_i][base_i](i) += _eigenvectors[var_i](glob_i, base_i) * snapshot(i);
+          base2(i, base_i) = _eigenvectors[var_i](glob_i, base_i) * snapshot(i);
         }
       }
 
@@ -482,6 +501,8 @@ PODReducedBasisTrainer::computeBasisVectors()
       // Normalizing the basis functions to make sure they are orthonormal.
       _base[var_i][base_i].scale(1.0 / sqrt(_eigenvalues[var_i](base_i)));
     }
+    std::cout << _var_names[var_i] << " V*S matrix = " << std::endl;
+    base2.print_scientific(std::cout);
   }
 }
 
@@ -609,7 +630,7 @@ PODReducedBasisTrainer::printEigenvalues()
   {
     std::cout << _var_names[var_i] << " singular values:" << std::endl;
     _eigenvalues[var_i].print_scientific(std::cout);
-    std::cout << _var_names[var_i] << " basis vectors:" << std::endl;
+    std::cout << _var_names[var_i] << " V matrix:" << std::endl;
     _eigenvectors[var_i].print_scientific(std::cout);
   }
 }
@@ -619,6 +640,18 @@ PODReducedBasisTrainer::slepcCompute()
 {
   for (unsigned int var_i = 0; var_i < _snapshots.size(); ++var_i)
   {
+    auto & snapshot = *_snapshots2[var_i];
+    snapshot.finalize();
+    snapshot.solveSVD(_error_res[var_i]);
+
+    DenseMatrix<Real> eig_mat;
+    DenseMatrix<Real> base;
+    snapshot.getBasesFull(&eig_mat, &base, &_eigenvectors[var_i]);
+    _eigenvalues[var_i] = eig_mat.diagonal();
+    std::cout << _var_names[var_i] << " SLEPC U matrix:" << std::endl;
+    base.print_scientific(std::cout);
+
+    /*
     auto & snapshot = _snapshots[var_i];
 
     // Build matrix
@@ -678,7 +711,7 @@ PODReducedBasisTrainer::slepcCompute()
         _eigenvectors[var_i](k, j) = uu[ind[j]][k];
     }
     _communicator.sum(_eigenvectors[var_i].get_values());
+    */
   }
-
   printEigenvalues();
 }

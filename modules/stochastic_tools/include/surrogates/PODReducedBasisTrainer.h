@@ -15,6 +15,7 @@
 #include "MooseTypes.h"
 #include "libmesh/parallel.h"
 #include "DistributedData.h"
+#include "SnapshotMatrix.h"
 
 // Forward declarations
 namespace libMesh
@@ -33,11 +34,13 @@ public:
 
   virtual void initialSetup() override;
 
-  virtual void initialize() override{};
+  virtual void initialize() override {};
 
   virtual void execute() override;
 
   virtual void finalize() override;
+
+  void snapshotMatrixSize(unsigned int var_i, dof_id_type num_snapshots, dof_id_type num_snapshots_local, dof_id_type snapshot_size);
 
   /// Initializing the reduced operators.
   void initReducedOperators();
@@ -106,6 +109,7 @@ protected:
 
   /// Distributed container for snapshots per variable.
   std::vector<DistributedSnapshots> _snapshots;
+  std::vector<std::unique_ptr<StochasticTools::SnapshotMatrix>> _snapshots2;
 
   /// The correlation matrices for the variables.
   std::vector<DenseMatrix<Real>> _corr_mx;
