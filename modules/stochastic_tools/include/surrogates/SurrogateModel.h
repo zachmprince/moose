@@ -24,6 +24,11 @@ public:
   static MooseEnum defaultResponseTypes() { return MooseEnum("real vector_real"); }
 
   /**
+   * The expected size of input vector when calling evaluate
+   */
+  unsigned int getInputSize() const { return _n_dims; };
+
+  /**
    * Evaluate surrogate model given a row of parameters.
    */
   virtual Real evaluate(const std::vector<Real> & x) const
@@ -78,6 +83,15 @@ private:
   /// Name used for model data. If a SurrogateTrainer object is supplied it's name is used. This
   /// results in the SurrogateModel having a reference to the training data so it is always current
   const std::string _model_meta_data_name;
+
+  /// The size of input expected when calling evaluate
+  const unsigned int & _n_dims;
+
+  /**
+   * Internal function to declare meta data in the application and return the name.
+   * Any call to 'getModelData' must happen after this call
+   */
+  std::string declareModelDataMap();
 
   /**
    * Internal function used by public declareModelData methods.

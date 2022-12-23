@@ -91,6 +91,18 @@ EvaluateSurrogate::EvaluateSurrogate(const InputParameters & parameters)
 void
 EvaluateSurrogate::execute()
 {
+  // Check if data size is appropriate
+  for (const auto & mdl : _model)
+    if (mdl->getInputSize() != _sampler.getNumberOfCols())
+      paramError("model",
+                 "Surrogate model ",
+                 mdl->name(),
+                 " is expecting an input size of ",
+                 mdl->getInputSize(),
+                 " but sampler has ",
+                 _sampler.getNumberOfCols(),
+                 " columns.");
+
   // Loop over samples
   for (const auto ind : make_range(_sampler.getNumberOfLocalRows()))
   {

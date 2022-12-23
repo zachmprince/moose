@@ -35,6 +35,17 @@ SurrogateModelScalarAux::initialSetup()
 {
   const auto parameter_names = getParam<std::vector<std::string>>("parameters");
   _n_params = parameter_names.size();
+
+  if (_model.getInputSize() != _n_params)
+    paramError("parameters",
+               "Surrogate model ",
+               _model.name(),
+               " is expecting an input size of ",
+               _model.getInputSize(),
+               " but ",
+               _n_params,
+               " parameters have been specified.");
+
   for (unsigned int j = 0; j < _n_params; ++j)
   {
     const auto name = parameter_names[j];

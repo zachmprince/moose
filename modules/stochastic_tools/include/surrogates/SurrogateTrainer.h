@@ -186,7 +186,7 @@ protected:
   /// Columns from sampler for predictors
   std::vector<unsigned int> _pcols;
   /// Dimension of predictor data - either _sampler.getNumberOfCols() or _pvals.size() + _pcols.size().
-  unsigned int _n_dims;
+  unsigned int & _n_dims;
   ///@}
   // TRAINING_DATA_MEMBERS_END
 

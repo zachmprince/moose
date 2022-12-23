@@ -24,7 +24,7 @@
       input = cartesian.i
       allow_test_objects = true
       csvdiff = 'cartesian_out_results_0002.csv'
-      detail = 'training and loading, and '
+      detail = 'training and loading, '
     []
     [predictors]
       type = CSVDiff
@@ -32,7 +32,15 @@
       allow_test_objects = true
       cli_args = 'Outputs/file_base=evaluate_out'
       csvdiff = 'evaluate_out_results_0002.csv'
-      detail = 'using explictly specified predictors.'
+      detail = 'using explictly specified predictors, and '
+    []
+    [size_error]
+      type = RunException
+      input = predictor_response.i
+      allow_test_objects = true
+      cli_args = 'Trainers/train/predictor_cols=1'
+      expect_err = 'Surrogate model \w+ is expecting an input size of \d+ but sampler has \d+ columns\.'
+      detail = 'error if test dimension does not train dimension.'
     []
   []
   [vector]

@@ -33,10 +33,20 @@ SurrogateModel::SurrogateModel(const InputParameters & parameters)
   : MooseObject(parameters),
     SamplerInterface(this),
     SurrogateModelInterface(this),
-    _model_meta_data_name(isParamValid("trainer")
-                              ? getSurrogateTrainer("trainer").modelMetaDataName()
-                              : _type + "_" + name())
+    _model_meta_data_name(declareModelDataMap()),
+    _n_dims(getModelData<unsigned int>("_n_dims"))
 {
+}
+
+std::string
+SurrogateModel::declareModelDataMap()
+{
+  const std::string data_name = isParamValid("trainer")
+                                    ? getSurrogateTrainer("trainer").modelMetaDataName()
+                                    : _type + "_" + name();
+
   // Register the meta data that is going to be loaded into
-  _app.registerRestartableDataMapName(_model_meta_data_name, name());
+  _app.registerRestartableDataMapName(data_name, name());
+
+  return data_name;
 }
