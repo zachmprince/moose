@@ -51,6 +51,20 @@ NearestPointSurrogate::evaluate(const std::vector<Real> & x, std::vector<Real> &
     y[r] = _sample_results[r][idx];
 }
 
+void
+NearestPointSurrogate::evaluateDerivative(const std::vector<Real> & x,
+                                          std::vector<Real> & dydx) const
+{
+  dydx.assign(x.size(), 0.0);
+}
+
+void
+NearestPointSurrogate::evaluateDerivative(const std::vector<Real> & x,
+                                          std::vector<std::vector<Real>> & dydx) const
+{
+  dydx.assign(x.size(), std::vector<Real>(_sample_results.size(), 0.0));
+}
+
 unsigned int
 NearestPointSurrogate::findNearestPoint(const std::vector<Real> & x) const
 {

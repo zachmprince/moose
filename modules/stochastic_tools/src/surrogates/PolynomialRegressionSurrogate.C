@@ -64,3 +64,48 @@ PolynomialRegressionSurrogate::evaluate(const std::vector<Real> & x, std::vector
       y[r] += _coeff[r][i] * tmp_val;
   }
 }
+
+void
+PolynomialRegressionSurrogate::evaluateDerivative(const std::vector<Real> & x,
+                                                  std::vector<Real> & dydx) const
+{
+  // Check whether input point has same dimensionality as training data
+  mooseAssert(_power_matrix[0].size() == x.size(),
+              "Input point does not match dimensionality of training data.");
+
+  dydx.assign(x.size(), 0.0);
+  for (unsigned int j = 0; j < x.size(); ++j)
+    for (unsigned int i = 0; i < _power_matrix.size(); ++i)
+    {
+      if (_power_matrix[i][j] == 0)
+        continue;
+      Real tmp_val = (Real)_power_matrix[i][j] * MathUtils::pow(x[j], _power_matrix[i][j] - 1);
+      for (unsigned int jj = 0; jj < _power_matrix[i].size(); ++jj)
+        if (j != jj)
+          tmp_val *= MathUtils::pow(x[jj], _power_matrix[i][jj]);
+      dydx[j] += _coeff[0][i] * tmp_val;
+    }
+}
+
+void
+PolynomialRegressionSurrogate::evaluateDerivative(const std::vector<Real> & x,
+                                                  std::vector<std::vector<Real>> & dydx) const
+{
+  // Check whether input point has same dimensionality as training data
+  mooseAssert(_power_matrix[0].size() == x.size(),
+              "Input point does not match dimensionality of training data.");
+
+  dydx.assign(x.size(), std::vector<Real>(_coeff.size(), 0.0));
+  for (unsigned int j = 0; j < x.size(); ++j)
+    for (unsigned int i = 0; i < _power_matrix.size(); ++i)
+    {
+      if (_power_matrix[i][j] == 0)
+        continue;
+      Real tmp_val = (Real)_power_matrix[i][j] * MathUtils::pow(x[j], _power_matrix[i][j] - 1);
+      for (unsigned int jj = 0; jj < _power_matrix[i].size(); ++jj)
+        if (j != jj)
+          tmp_val *= MathUtils::pow(x[jj], _power_matrix[i][jj]);
+      for (unsigned int r = 0; r < _coeff.size(); ++r)
+        dydx[j][r] += _coeff[r][i] * tmp_val;
+    }
+}

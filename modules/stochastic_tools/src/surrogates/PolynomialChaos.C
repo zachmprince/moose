@@ -57,6 +57,14 @@ PolynomialChaos::evaluate(const std::vector<Real> & x) const
   return val;
 }
 
+void
+PolynomialChaos::evaluateDerivative(const std::vector<Real> & x, std::vector<Real> & dydx) const
+{
+  dydx.resize(_ndim);
+  for (unsigned int d = 0; d < _ndim; ++d)
+    dydx[d] = computePartialDerivative({d}, x);
+}
+
 const std::vector<std::vector<unsigned int>> &
 PolynomialChaos::getPolynomialOrders() const
 {
@@ -133,12 +141,6 @@ PolynomialChaos::powerExpectation(const unsigned int n) const
   }
 
   return val;
-}
-
-Real
-PolynomialChaos::computeDerivative(const unsigned int dim, const std::vector<Real> & x) const
-{
-  return computePartialDerivative({dim}, x);
 }
 
 Real

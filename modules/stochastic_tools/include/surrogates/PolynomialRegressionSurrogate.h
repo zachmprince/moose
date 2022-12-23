@@ -22,6 +22,12 @@ public:
   virtual Real evaluate(const std::vector<Real> & x) const override;
   virtual void evaluate(const std::vector<Real> & x, std::vector<Real> & y) const override;
 
+  using SurrogateModel::evaluateDerivative;
+  virtual void evaluateDerivative(const std::vector<Real> & x,
+                                  std::vector<Real> & dydx) const override;
+  virtual void evaluateDerivative(const std::vector<Real> & x,
+                                  std::vector<std::vector<Real>> & dydx) const override;
+
 protected:
   /// Coefficients of regression model
   const std::vector<std::vector<Real>> & _coeff;

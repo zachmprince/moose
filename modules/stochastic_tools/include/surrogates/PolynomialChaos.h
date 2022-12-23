@@ -23,6 +23,9 @@ public:
   PolynomialChaos(const InputParameters & parameters);
   using SurrogateModel::evaluate;
   virtual Real evaluate(const std::vector<Real> & x) const override;
+  using SurrogateModel::evaluateDerivative;
+  virtual void evaluateDerivative(const std::vector<Real> & x,
+                                  std::vector<Real> & dydx) const override;
 
   /// Access number of dimensions/parameters
   std::size_t getNumberOfParameters() const { return _poly.size(); }
@@ -48,8 +51,6 @@ public:
   /// Compute expectation of a certain power of the QoI: E[(u-\mu)^n]
   Real powerExpectation(const unsigned int n) const;
 
-  /// Evaluates partial derivative of expansion: du(x)/dx_dim
-  Real computeDerivative(const unsigned int dim, const std::vector<Real> & x) const;
   /**
    * Evaluates sum of partial derivative of expansion. Example:
    * computeGradient({0, 2, 3}, x) = du(x)/dx_0dx_2dx_3

@@ -141,8 +141,9 @@ PolynomialChaosReporter::computeLocalSensitivity(const PolynomialChaos & pc,
 {
   std::vector<Real> sense(data.size());
   const auto val = pc.evaluate(data);
+  pc.evaluateDerivative(data, sense);
   for (const auto & d : index_range(data))
-    sense[d] = data[d] / val * pc.computeDerivative(d, data);
+    sense[d] *= data[d] / val;
   return sense;
 }
 

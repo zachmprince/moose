@@ -49,4 +49,22 @@
     jsondiff = 'np_vec_out.json'
     requirement = 'The sytem shall be able to create nearest point surrogates with vector-type response.'
   []
+
+  [derivative]
+    requirement = 'The system shall be able to compute the derivative of a nearest-point surrogate with respect to predictor data for '
+    [real]
+      type = JSONDiff
+      input = derivative.i
+      allow_test_objects = true
+      jsondiff = derivative_out.json
+      detail = 'scalar response data;'
+    []
+    [vector_real]
+      type = JSONDiff
+      input = derivative_vector.i
+      allow_test_objects = true
+      jsondiff = derivative_vector_out.json
+      detail = 'vector response data;'
+    []
+  []
 []

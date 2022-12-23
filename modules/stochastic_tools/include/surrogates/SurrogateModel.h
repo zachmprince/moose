@@ -63,6 +63,21 @@ public:
   }
   ///@}
 
+  /// @{
+  /**
+   * Methods that evaluate derivative with respect to each predictor
+   */
+  virtual void evaluateDerivative(const std::vector<Real> & x, std::vector<Real> & /*dydx*/) const
+  {
+    evaluateError(x, Real());
+  }
+  virtual void evaluateDerivative(const std::vector<Real> & x,
+                                  std::vector<std::vector<Real>> & /*dydx*/) const
+  {
+    evaluateError(x, std::vector<Real>());
+  }
+  /// @}
+
   /**
    * The name for training data stored within the MooseApp
    */
