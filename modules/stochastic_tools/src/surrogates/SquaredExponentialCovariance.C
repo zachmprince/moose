@@ -45,6 +45,20 @@ SquaredExponentialCovariance::computeCovarianceMatrix(RealEigenMatrix & K,
 }
 
 void
+SquaredExponentialCovariance::computedKdx(RealEigenMatrix & dKdx,
+                                          const RealEigenMatrix & x,
+                                          const RealEigenMatrix & xp,
+                                          unsigned int ind) const
+{
+  // Derivative is K * (x_i-x'_i)/l_i^2
+  computeCovarianceMatrix(dKdx, x, xp, false);
+  const Real li2 = _length_factor[ind] * _length_factor[ind];
+  for (unsigned int ii = 0; ii < x.rows(); ++ii)
+    for (unsigned int jj = 0; jj < xp.rows(); ++jj)
+      dKdx(ii, jj) *= (x(ii, ind) - xp(jj, ind)) / li2;
+}
+
+void
 SquaredExponentialCovariance::SquaredExponentialFunction(RealEigenMatrix & K,
                                                          const RealEigenMatrix & x,
                                                          const RealEigenMatrix & xp,

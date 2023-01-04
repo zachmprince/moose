@@ -63,6 +63,51 @@ MaternHalfIntCovariance::computeCovarianceMatrix(RealEigenMatrix & K,
 }
 
 void
+MaternHalfIntCovariance::computedKdx(RealEigenMatrix & dKdx,
+                                     const RealEigenMatrix & x,
+                                     const RealEigenMatrix & xp,
+                                     unsigned int ind) const
+{
+  // This factor is used over and over, don't calculate each time
+  const Real factor = sqrt(2 * _p + 1);
+
+  for (unsigned int ii = 0; ii < x.rows(); ++ii)
+    for (unsigned int jj = 0; jj < xp.rows(); ++jj)
+    {
+      // Compute distance per parameter, scaled by length factor
+      Real r_scaled = 0;
+      for (unsigned int kk = 0; kk < x.cols(); ++kk)
+      {
+        const Real diff = (x(ii, kk) - xp(jj, kk)) / _length_factor[kk];
+        r_scaled += diff * diff;
+      }
+      r_scaled = sqrt(r_scaled);
+
+      // Compute the polynomial term and its derivative
+      // tgamma(x+1) == x! when x is a natural number, which should always be the case for
+      // MaternHalfInt
+      Real sum = 0;
+      Real dsum = 0;
+      for (unsigned int pp = 0; pp <= _p; ++pp)
+      {
+        const Real pfact = (tgamma(_p + pp + 1) / (tgamma(pp + 1) * tgamma(_p - pp + 1))) *
+                           pow(2.0 * factor * r_scaled, _p - pp);
+        sum += pfact;
+        dsum += pfact / r_scaled * (_p - pp);
+      }
+
+      // Compute the exponential term and its derivative
+      const Real pexp =
+          _sigma_f_squared * std::exp(-factor * r_scaled) * (tgamma(_p + 1) / (tgamma(2 * _p + 1)));
+      dKdx(ii, jj) = -factor * pexp * sum + pexp * dsum;
+
+      // Apply derivative of distance
+      dKdx(ii, jj) *=
+          (xp(jj, ind) - x(ii, ind)) / (_length_factor[ind] * _length_factor[ind]) / r_scaled;
+    }
+}
+
+void
 MaternHalfIntCovariance::maternHalfIntFunction(RealEigenMatrix & K,
                                                const RealEigenMatrix & x,
                                                const RealEigenMatrix & xp,

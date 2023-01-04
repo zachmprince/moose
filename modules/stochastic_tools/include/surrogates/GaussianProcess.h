@@ -24,6 +24,9 @@ public:
   using SurrogateModel::evaluate;
   virtual Real evaluate(const std::vector<Real> & x) const override;
   virtual Real evaluate(const std::vector<Real> & x, Real & std) const override;
+  using SurrogateModel::evaluateDerivative;
+  virtual void evaluateDerivative(const std::vector<Real> & x,
+                                  std::vector<Real> & dydx) const override;
 
   /**
    * This function is called by LoadCovarianceDataAction when the surrogate is

@@ -27,6 +27,12 @@ public:
                                        const RealEigenMatrix & xp,
                                        const bool is_self_covariance) const = 0;
 
+  /// Generates the derivative of Covariance Matrix with respect to @param xp
+  virtual void computedKdx(RealEigenMatrix & dKdx,
+                           const RealEigenMatrix & x,
+                           const RealEigenMatrix & xp,
+                           unsigned int ind) const;
+
   /// Used for outputting Hyper-parameter settings
   virtual void
   buildHyperParamMap(std::unordered_map<std::string, Real> & map,

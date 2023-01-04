@@ -23,6 +23,12 @@ public:
                                const RealEigenMatrix & xp,
                                const bool is_self_covariance) const override;
 
+  /// Generates the derivative of Covariance Matrix with respect to @param xp
+  void computedKdx(RealEigenMatrix & dKdx,
+                   const RealEigenMatrix & x,
+                   const RealEigenMatrix & xp,
+                   unsigned int ind) const override;
+
   static void maternHalfIntFunction(RealEigenMatrix & K,
                                     const RealEigenMatrix & x,
                                     const RealEigenMatrix & xp,

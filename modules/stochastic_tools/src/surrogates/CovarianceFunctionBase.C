@@ -60,6 +60,15 @@ CovarianceFunctionBase::loadHyperParamMap(
 }
 
 void
+CovarianceFunctionBase::computedKdx(RealEigenMatrix &,
+                                    const RealEigenMatrix &,
+                                    const RealEigenMatrix &,
+                                    unsigned int) const
+{
+  mooseError("Computation of covariance derivative has not been implemented for ", type());
+}
+
+void
 CovarianceFunctionBase::computedKdhyper(RealEigenMatrix & /*dKdhp*/,
                                         const RealEigenMatrix & /*x*/,
                                         std::string /*hyper_param_name*/,

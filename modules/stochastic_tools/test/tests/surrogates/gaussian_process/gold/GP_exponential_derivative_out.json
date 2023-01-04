@@ -1,0 +1,79 @@
+{
+    "app_name": "main",
+    "current_time": "Tue Jan  3 19:15:49 2023",
+    "executable": "/home/prinzm/projects/moose/modules/stochastic_tools/stochastic_tools-opt",
+    "executable_time": "Tue Jan  3 19:15:39 2023",
+    "libmesh_version": "3f05f40f4a45060c1fd07281f8869a4667086291",
+    "moose_version": "git commit 36d6858b56 on 2022-12-23",
+    "petsc_version": "3.16.6",
+    "reporters": {
+        "derivative": {
+            "type": "SurrogateDerivativeTester",
+            "values": {
+                "GP_avg": {
+                    "row_begin": 0,
+                    "row_end": 5,
+                    "type": "std::vector<std::vector<double>>"
+                },
+                "GP_avg_fd": {
+                    "row_begin": 0,
+                    "row_end": 5,
+                    "type": "std::vector<std::vector<double>>"
+                }
+            }
+        }
+    },
+    "slepc_version": "3.16.2",
+    "time_steps": [
+        {
+            "derivative": {
+                "GP_avg": [
+                    [
+                        -52.85373437582295,
+                        0.004419591825977945
+                    ],
+                    [
+                        -50.7881802248613,
+                        -0.004200535953423408
+                    ],
+                    [
+                        -108.45291704440133,
+                        0.04410318244676936
+                    ],
+                    [
+                        -59.257177070644175,
+                        0.09793283844202125
+                    ],
+                    [
+                        10.64160799841589,
+                        -0.7476209429202678
+                    ]
+                ],
+                "GP_avg_fd": [
+                    [
+                        -52.85375049595772,
+                        0.0044196880070431245
+                    ],
+                    [
+                        -50.78819639692892,
+                        -0.0042004998581188745
+                    ],
+                    [
+                        -108.45291625021868,
+                        0.04410320214786196
+                    ],
+                    [
+                        -59.257145713575404,
+                        0.09793276471743828
+                    ],
+                    [
+                        10.641677589196213,
+                        -0.7476209900392174
+                    ]
+                ]
+            },
+            "time": 1.0,
+            "time_step": 1
+        }
+    ]
+}

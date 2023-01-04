@@ -62,6 +62,29 @@ ExponentialCovariance::computeCovarianceMatrix(RealEigenMatrix & K,
 }
 
 void
+ExponentialCovariance::computedKdx(RealEigenMatrix & dKdx,
+                                   const RealEigenMatrix & x,
+                                   const RealEigenMatrix & xp,
+                                   unsigned int ind) const
+{
+  // Derivative is K * gamma*(r^2)^(gamma/2-1) * (x_i-x'_i)/l_i^2
+  computeCovarianceMatrix(dKdx, x, xp, false);
+  const Real li2 = _length_factor[ind] * _length_factor[ind];
+  for (unsigned int ii = 0; ii < x.rows(); ++ii)
+    for (unsigned int jj = 0; jj < xp.rows(); ++jj)
+    {
+      Real r_squared = 0.0;
+      for (unsigned int kk = 0; kk < x.cols(); ++kk)
+      {
+        Real diff = (x(ii, kk) - xp(jj, kk)) / _length_factor[kk];
+        r_squared += diff * diff;
+      }
+      dKdx(ii, jj) *=
+          _gamma * pow(r_squared, _gamma / 2.0 - 1.0) * (x(ii, ind) - xp(jj, ind)) / li2;
+    }
+}
+
+void
 ExponentialCovariance::ExponentialFunction(RealEigenMatrix & K,
                                            const RealEigenMatrix & x,
                                            const RealEigenMatrix & xp,

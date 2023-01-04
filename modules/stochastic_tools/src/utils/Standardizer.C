@@ -100,6 +100,14 @@ Standardizer::getDescaled(RealEigenMatrix & input) const
   input = input.array().rowwise() * stdev.transpose().array();
 }
 
+void
+Standardizer::getDerivative(RealEigenMatrix & input) const
+{
+  for (unsigned int ii = 0; ii < input.rows(); ++ii)
+    for (unsigned int jj = 0; jj < input.cols(); ++jj)
+      input(ii, jj) = 1.0 / _stdev[jj];
+}
+
 /// Helper for dataStore
 void
 Standardizer::storeHelper(std::ostream & stream, void * context) const

@@ -84,3 +84,35 @@ GaussianProcess::evaluate(const std::vector<Real> & x, Real & std_dev) const
 
   return pred_value(0, 0);
 }
+
+void
+GaussianProcess::evaluateDerivative(const std::vector<Real> & x, std::vector<Real> & dydx) const
+{
+  unsigned int n_params = _training_params.cols();
+  unsigned int num_tests = 1;
+
+  mooseAssert(x.size() == n_params,
+              "Number of parameters provided for evaluation does not match number of parameters "
+              "used for training.");
+
+  RealEigenMatrix test_points(num_tests, n_params);
+  for (unsigned int ii = 0; ii < n_params; ++ii)
+    test_points(0, ii) = x[ii];
+  _gp_handler.getParamStandardizer().getStandardized(test_points);
+
+  RealEigenMatrix dxbardx = test_points;
+  _gp_handler.getParamStandardizer().getDerivative(dxbardx);
+
+  RealEigenMatrix dKdx(_training_params.rows(), test_points.rows());
+  dydx.assign(n_params, 0.0);
+  for (unsigned int jj = 0; jj < n_params; ++jj)
+  {
+    // Compute dKdx with standardized parameters and data
+    _gp_handler.getCovarFunction().computedKdx(dKdx, _training_params, test_points, jj);
+    RealEigenMatrix dydxbar = dKdx.transpose() * _gp_handler.getKResultsSolve();
+    // Apply derivative of data standardization (dydybar)
+    _gp_handler.getDataStandardizer().getDescaled(dydxbar);
+    // Apply derivative of parameter standardization (dxbardx)
+    dydx[jj] = dydxbar(0, 0) * dxbardx(0, jj);
+  }
+}

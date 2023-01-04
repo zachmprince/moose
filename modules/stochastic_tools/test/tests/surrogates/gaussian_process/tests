@@ -46,6 +46,31 @@
     []
   []
 
+  [derivative]
+    requirement = 'The system shall be able to compute the derivative a Gaussian process surrogate with'
+    [GP_squared_exponential]
+      type = JSONDiff
+      input = GP_squared_exponential_derivative.i
+      allow_test_objects = true
+      jsondiff = GP_squared_exponential_derivative_out.json
+      detail = 'a squared exponential kernel;'
+    []
+    [GP_exponential]
+      type = JSONDiff
+      input = GP_exponential_derivative.i
+      allow_test_objects = true
+      jsondiff = GP_exponential_derivative_out.json
+      detail = 'an exponential kernel;'
+    []
+    [GP_Matern_half_int]
+      type = JSONDiff
+      input = GP_Matern_half_int_derivative.i
+      allow_test_objects = true
+      jsondiff = GP_Matern_half_int_derivative_out.json
+      detail = 'Matern half integer kernel;'
+    []
+  []
+
   [tuning]
     requirement = 'The system shall be be able to tune hyperparameters of a Gaussian process surrogate with'
     [GP_squared_exponential_tuned]

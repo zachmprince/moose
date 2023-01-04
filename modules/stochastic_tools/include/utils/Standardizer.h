@@ -48,6 +48,9 @@ public:
   /// De-scales the assumed scaled input
   void getDescaled(RealEigenMatrix & input) const;
 
+  /// Computes derivative of the scaled input w.r.t the unscaled input
+  void getDerivative(RealEigenMatrix & input) const;
+
 protected:
   std::vector<Real> _mean;
   std::vector<Real> _stdev;
