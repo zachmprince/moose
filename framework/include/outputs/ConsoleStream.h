@@ -87,6 +87,16 @@ public:
    */
   unsigned long long int numPrinted() const;
 
+  /**
+   * Add indent prefix to console, prefix cannot be empty
+   */
+  void addIndent(std::string prefix) const;
+
+  /**
+   * Remove specific indent prefix to console, empty prefix will remove last entry
+   */
+  void removeIndent(std::string prefix = "") const;
+
 private:
   /// Reference to the OutputWarhouse that contains the Console output objects
   OutputWarehouse & _output_warehouse;

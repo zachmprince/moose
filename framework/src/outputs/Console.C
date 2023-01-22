@@ -691,8 +691,13 @@ Console::write(std::string message, bool indent /*=true*/)
   bool this_message_ends_in_newline = message.empty() ? true : message.back() == '\n';
 
   // Apply MultiApp indenting
-  if (_last_message_ended_in_newline && indent && _app.multiAppLevel() > 0)
-    MooseUtils::indentMessage(_app.name(), message);
+  if (_last_message_ended_in_newline && indent)
+  {
+    if (_app.multiAppLevel() > 0)
+      MooseUtils::indentMessage(_app.name(), message);
+    for (const auto & pfx : _indent_prefixes)
+      MooseUtils::indentMessage(pfx, message);
+  }
 
   // Write message to the screen
   if (_write_screen)
@@ -709,6 +714,28 @@ Console::mooseConsole(const std::string & message)
 
   // Flush the stream to the screen
   Moose::out << std::flush;
+}
+
+void
+Console::addIndent(std::string prefix)
+{
+  if (prefix.empty())
+    mooseError("Indent prefix cannot be empty.");
+  _indent_prefixes.push_back(prefix);
+}
+
+void
+Console::removeIndent(std::string prefix)
+{
+  if (prefix.empty())
+    _indent_prefixes.erase(_indent_prefixes.end());
+  else
+  {
+    auto it = std::find(_indent_prefixes.rbegin(), _indent_prefixes.rend(), prefix);
+    if (it == _indent_prefixes.rend())
+      mooseError("Indent prefix '", prefix, "' has not been added to console.");
+    _indent_prefixes.erase(std::next(it).base());
+  }
 }
 
 void

@@ -180,6 +180,16 @@ public:
   void mooseConsole(std::ostringstream & buffer);
 
   /**
+   * Add indent prefix to console, prefix cannot be empty
+   */
+  void addConsoleIndent(std::string prefix);
+
+  /**
+   * Remove specific indent prefix to console, empty prefix will remove last entry
+   */
+  void removeConsoleIndent(std::string prefix = "");
+
+  /**
    * The buffered messages stream for Console objects
    * @return Reference to the stream storing cached messages from calls to _console
    */

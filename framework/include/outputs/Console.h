@@ -211,6 +211,16 @@ private:
    */
   void mooseConsole(const std::string & message);
 
+  /**
+   * Add indent prefix to console, prefix cannot be empty
+   */
+  void addIndent(std::string prefix);
+
+  /**
+   * Remove specific indent prefix to console, empty prefix will remove last entry
+   */
+  void removeIndent(std::string prefix = "");
+
   /// Reference to cached messages from calls to _console
   const std::ostringstream & _console_buffer;
 
@@ -229,6 +239,9 @@ private:
   friend class OutputWarehouse;
 
 private:
+  /// Vector of prefixes to add to message indent
+  std::vector<std::string> _indent_prefixes;
+
   /// A boolean for protecting _system_info_flags from being changed undesirably
   bool _allow_changing_sysinfo_flag;
 

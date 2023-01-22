@@ -247,6 +247,20 @@ OutputWarehouse::flushConsoleBuffer()
 }
 
 void
+OutputWarehouse::addConsoleIndent(std::string prefix)
+{
+  for (const auto & obj : getOutputs<Console>())
+    obj->addIndent(prefix);
+}
+
+void
+OutputWarehouse::removeConsoleIndent(std::string prefix)
+{
+  for (const auto & obj : getOutputs<Console>())
+    obj->removeIndent(prefix);
+}
+
+void
 OutputWarehouse::setFileNumbers(std::map<std::string, unsigned int> input, unsigned int offset)
 {
   for (const auto & obj : _all_objects)

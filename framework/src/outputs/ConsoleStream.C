@@ -71,3 +71,15 @@ ConsoleStream::numPrinted() const
 {
   return _output_warehouse.numPrinted();
 }
+
+void
+ConsoleStream::addIndent(std::string prefix) const
+{
+  _output_warehouse.addConsoleIndent(prefix);
+}
+
+void
+ConsoleStream::removeIndent(std::string prefix) const
+{
+  _output_warehouse.removeConsoleIndent(prefix);
+}
