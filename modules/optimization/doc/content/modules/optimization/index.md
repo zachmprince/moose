@@ -28,3 +28,5 @@ There are a number of inverse optimization example problems to demonstrate usage
 provided here.
 !col-end!
 !row-end!
+
+For an introductory slideshow on the use of the optimization solvers in MOOSE, we refer the visitor to the [Optimization Workshop Slides](optimization_slides.md optional=True).
