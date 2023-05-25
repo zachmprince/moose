@@ -41,10 +41,6 @@ AdaptiveImportanceSampler::validParams()
   params.addRequiredParam<Real>(
       "std_factor", "Factor to be multiplied to the standard deviation of the importance samples");
   params.addParam<bool>("use_absolute_value", false, "Use absolute value of the sub app output");
-  params.addParam<unsigned int>(
-      "num_random_seeds",
-      100000,
-      "Initialize a certain number of random seeds. Change from the default only if you have to.");
   return params;
 }
 
@@ -58,10 +54,14 @@ AdaptiveImportanceSampler::AdaptiveImportanceSampler(const InputParameters & par
     _num_importance_sampling_steps(getParam<int>("num_importance_sampling_steps")),
     _std_factor(getParam<Real>("std_factor")),
     _use_absolute_value(getParam<bool>("use_absolute_value")),
-    _num_random_seeds(getParam<unsigned int>("num_random_seeds")),
-    _is_sampling_completed(false),
+    _is_sampling_completed(declareRestartableData<bool>("_is_sampling_completed", false)),
     _step(getCheckedPointerParam<FEProblemBase *>("_fe_problem_base")->timeStep()),
-    _inputs(getReporterValue<std::vector<std::vector<Real>>>("inputs_reporter"))
+    _inputs(getReporterValue<std::vector<std::vector<Real>>>("inputs_reporter")),
+    _check_step(declareRestartableData<int>("_check_step", 0)),
+    _prev_value(declareRestartableData<std::vector<Real>>("_prev_value")),
+    _mean_sto(declareRestartableData<std::vector<Real>>("_mean_sto")),
+    _std_sto(declareRestartableData<std::vector<Real>>("_std_sto")),
+    _inputs_sto(declareRestartableData<std::vector<std::vector<Real>>>("_inputs_sto"))
 {
   // Filling the `distributions` vector with the user-provided distributions.
   for (const DistributionName & name : getParam<std::vector<DistributionName>>("distributions"))
@@ -77,6 +77,9 @@ AdaptiveImportanceSampler::AdaptiveImportanceSampler(const InputParameters & par
   // Setting the number of columns in the sampler matrix (equal to the number of distributions).
   setNumberOfCols(_distributions.size());
 
+  if (_app.isRecovering() || _app.isRestarting())
+    return;
+
   /* `inputs_sto` is a member variable that aids in forming the importance distribution.
      One dimension of this variable is equal to the number of distributions. The other dimension
      of the variable, at the last step, is equal to the number of samples the user desires.*/
@@ -90,17 +93,13 @@ AdaptiveImportanceSampler::AdaptiveImportanceSampler(const InputParameters & par
      MCMC algorithm and proposing the next sample.*/
   _prev_value.resize(_distributions.size());
 
-  // `check_step` is a member variable for ensuring that the MCMC algorithm proceeds in a sequential
-  // fashion.
-  _check_step = 0;
-
   // Storage for means of input values for proposing the next sample
   _mean_sto.resize(_distributions.size());
 
   // Storage for standard deviations of input values for proposing the next sample
   _std_sto.resize(_distributions.size());
 
-  setNumberOfRandomSeeds(_num_random_seeds);
+  setNumberOfRandomSeeds(_num_samples_train + _num_importance_sampling_steps + 1);
 }
 
 Real

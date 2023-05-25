@@ -53,6 +53,7 @@
                  stm_small_batch_out_main1.csv stm_small_batch_out_main1_sub0.csv stm_small_batch_out_main1_sub0_subsub0.csv stm_small_batch_out_main1_sub0_subsub1.csv
                  stm_small_batch_out_main2.csv stm_small_batch_out_main2_sub0.csv stm_small_batch_out_main2_sub0_subsub0.csv stm_small_batch_out_main2_sub0_subsub1.csv
                  stm_small_batch_out_main3.csv stm_small_batch_out_main3_sub0.csv stm_small_batch_out_main3_sub0_subsub0.csv stm_small_batch_out_main3_sub0_subsub1.csv'
+      max_parallel = 4 # Transfers not working when there is a nested subapp that isn't on the sub-apps root processor
       detail = 'normal multiapp mode;'
     []
     [batch_reset]
@@ -63,6 +64,7 @@
                  stm_small_batch_out_main1.csv stm_small_batch_out_main1_sub0.csv stm_small_batch_out_main1_sub0_subsub0.csv stm_small_batch_out_main1_sub0_subsub1.csv
                  stm_small_batch_out_main2.csv stm_small_batch_out_main2_sub0.csv stm_small_batch_out_main2_sub0_subsub0.csv stm_small_batch_out_main2_sub0_subsub1.csv
                  stm_small_batch_out_main3.csv stm_small_batch_out_main3_sub0.csv stm_small_batch_out_main3_sub0_subsub0.csv stm_small_batch_out_main3_sub0_subsub1.csv'
+      max_parallel = 4 # Transfers not working when there is a nested subapp that isn't on the sub-apps root processor
       detail = 'batch-reset multiapp mode;'
     []
     [batch_restore]
@@ -73,6 +75,7 @@
                  stm_small_batch_out_main1.csv stm_small_batch_out_main1_sub0.csv stm_small_batch_out_main1_sub0_subsub0.csv stm_small_batch_out_main1_sub0_subsub1.csv
                  stm_small_batch_out_main2.csv stm_small_batch_out_main2_sub0.csv stm_small_batch_out_main2_sub0_subsub0.csv stm_small_batch_out_main2_sub0_subsub1.csv
                  stm_small_batch_out_main3.csv stm_small_batch_out_main3_sub0.csv stm_small_batch_out_main3_sub0_subsub0.csv stm_small_batch_out_main3_sub0_subsub1.csv'
+      max_parallel = 4 # Transfers not working when there is a nested subapp that isn't on the sub-apps root processor
       detail = 'batch-restore multiapp mode;'
     []
   []

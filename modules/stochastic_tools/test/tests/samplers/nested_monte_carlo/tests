@@ -9,6 +9,7 @@
       input = 'nested_monte_carlo.i'
       csvdiff = 'nested_monte_carlo_out_data_0001.csv'
       max_parallel = 1
+      recover = false # Parallel test is using the same file base, but that tests is more important
       detail = 'in serial;'
     []
     [parallel]

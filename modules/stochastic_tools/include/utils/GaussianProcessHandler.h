@@ -185,6 +185,7 @@ public:
   const StochasticTools::Standardizer & getParamStandardizer() const { return _param_standardizer; }
   const StochasticTools::Standardizer & getDataStandardizer() const { return _data_standardizer; }
   const RealEigenMatrix & getK() const { return _K; }
+  const bool & getKDecompValid() { return _K_decomp_valid; }
   const RealEigenMatrix & getKResultsSolve() const { return _K_results_solve; }
   const Eigen::LLT<RealEigenMatrix> & getKCholeskyDecomp() const { return _K_cho_decomp; }
   const CovarianceFunctionBase & getCovarFunction() const { return *_covariance_function; }
@@ -206,6 +207,7 @@ public:
   StochasticTools::Standardizer & paramStandardizer() { return _param_standardizer; }
   StochasticTools::Standardizer & dataStandardizer() { return _data_standardizer; }
   RealEigenMatrix & K() { return _K; }
+  bool & kDecompValid() { return _K_decomp_valid; }
   RealEigenMatrix & KResultsSolve() { return _K_results_solve; }
   Eigen::LLT<RealEigenMatrix> & KCholeskyDecomp() { return _K_cho_decomp; }
   CovarianceFunctionBase * covarFunctionPtr() { return _covariance_function; }
@@ -267,6 +269,9 @@ protected:
 
   /// The batch size for Adam optimization
   unsigned int _batch_size;
+
+  /// Whether or not the decomposition has been performed
+  bool _K_decomp_valid = false;
 };
 
 } // StochasticTools namespac

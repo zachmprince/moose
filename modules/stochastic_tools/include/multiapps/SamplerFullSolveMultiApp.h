@@ -66,6 +66,8 @@ protected:
   /// Override to avoid 'solve converged' message and print when processors are finished
   virtual void showStatusMessage(unsigned int i) const override;
 
+  virtual bool shouldRecoverApps() const override { return false; }
+
   /// Sampler to utilize for creating MultiApps
   Sampler & _sampler;
 

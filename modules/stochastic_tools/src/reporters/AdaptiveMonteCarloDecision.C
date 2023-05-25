@@ -41,19 +41,29 @@ AdaptiveMonteCarloDecision::AdaptiveMonteCarloDecision(const InputParameters & p
     _sampler(getSampler("sampler")),
     _ais(dynamic_cast<const AdaptiveImportanceSampler *>(&_sampler)),
     _pss(dynamic_cast<const ParallelSubsetSimulation *>(&_sampler)),
-    _check_step(std::numeric_limits<int>::max())
+    _check_step(declareRestartableData<int>("_check_step", std::numeric_limits<int>::max())),
+    _prev_val(declareRestartableData<std::vector<std::vector<Real>>>("_prev_val")),
+    _prev_val_out(declareRestartableData<std::vector<Real>>("_prev_val_out")),
+    _inputs_sto(declareRestartableData<std::vector<std::vector<Real>>>("_inputs_sto")),
+    _inputs_sorted(declareRestartableData<std::vector<std::vector<Real>>>("_inputs_sorted")),
+    _outputs_sto(declareRestartableData<std::vector<Real>>("_outputs_sto")),
+    _output_sorted(declareRestartableData<std::vector<Real>>("_output_sorted")),
+    _output_limit(declareRestartableData<Real>("_output_limit"))
 {
 
   // Check whether the selected sampler is an adaptive sampler or not
   if (!_ais && !_pss)
     paramError("sampler", "The selected sampler is not an adaptive sampler.");
 
-  const auto rows = _sampler.getNumberOfRows();
-  const auto cols = _sampler.getNumberOfCols();
-
   // Create communicator that only has processors with rows
   _communicator.split(
       _sampler.getNumberOfLocalRows() > 0 ? 1 : MPI_UNDEFINED, processor_id(), _local_comm);
+
+  if (_app.isRecovering() || _app.isRestarting())
+    return;
+
+  const auto rows = _sampler.getNumberOfRows();
+  const auto cols = _sampler.getNumberOfCols();
 
   // Initialize the required variables depending upon the type of adaptive Monte Carlo algorithm
   _inputs.resize(cols, std::vector<Real>(rows));

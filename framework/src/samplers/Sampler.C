@@ -65,17 +65,19 @@ Sampler::Sampler(const InputParameters & parameters)
     DistributionInterface(this),
     PerfGraphInterface(this),
     SamplerInterface(this),
+    Restartable(this, "Samplers"),
     _min_procs_per_row(getParam<unsigned int>("min_procs_per_row") > n_processors()
                            ? n_processors()
                            : getParam<unsigned int>("min_procs_per_row")),
     _max_procs_per_row(getParam<unsigned int>("max_procs_per_row")),
+    _generator(declareRecoverableData<MooseRandom>("_generator")),
     _n_rows(0),
     _n_cols(0),
     _n_seeds(1),
     _next_local_row_requires_state_restore(true),
     _initialized(false),
     _needs_reinit(true),
-    _has_executed(false),
+    _has_executed(declareRecoverableData<bool>("_has_executed", false)),
     _limit_get_global_samples(getParam<dof_id_type>("limit_get_global_samples")),
     _limit_get_local_samples(getParam<dof_id_type>("limit_get_local_samples")),
     _limit_get_next_local_row(getParam<dof_id_type>("limit_get_next_local_row")),
@@ -94,17 +96,20 @@ Sampler::init()
   // Initialize the parallel partition of sample to return
   reinit();
 
-  // Seed the "master" seed generator
-  const unsigned int seed = getParam<unsigned int>("seed");
-  MooseRandom seed_generator;
-  seed_generator.seed(0, seed);
+  if (!_app.isRecovering())
+  {
+    // Seed the "master" seed generator
+    const unsigned int seed = getParam<unsigned int>("seed");
+    MooseRandom seed_generator;
+    seed_generator.seed(0, seed);
 
-  // See the "secondary" generator that will be used for the random number generation
-  for (std::size_t i = 0; i < _n_seeds; ++i)
-    _generator.seed(i, seed_generator.randl(0));
+    // See the "secondary" generator that will be used for the random number generation
+    for (std::size_t i = 0; i < _n_seeds; ++i)
+      _generator.seed(i, seed_generator.randl(0));
 
-  // Save the initial state
-  saveGeneratorState();
+    // Save the initial state
+    saveGeneratorState();
+  }
 
   // Mark class as initialized, which locks out certain methods
   _initialized = true;

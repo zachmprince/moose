@@ -78,7 +78,7 @@
                     0.0
                 ],
                 "reporter_transfer:converged": [
-                    false
+                    true
                 ]
             },
             "time": 0.0,

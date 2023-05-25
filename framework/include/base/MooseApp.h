@@ -524,7 +524,7 @@ public:
    *  Whether or not this simulation should only run half its transient (useful for testing
    * recovery)
    */
-  bool halfTransient() const { return _half_transient; }
+  bool halfTransient() const { return isUltimateMaster() && _half_transient; }
 
   /**
    * Store a map of outputter names and file numbers

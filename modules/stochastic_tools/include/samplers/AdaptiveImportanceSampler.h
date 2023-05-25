@@ -79,11 +79,8 @@ protected:
   /// Absolute value of the model result. Use this when failure is defined as a non-exceedance rather than an exceedance.
   const bool & _use_absolute_value;
 
-  /// Initialize a certain number of random seeds. Change from the default only if you have to.
-  const unsigned int & _num_random_seeds;
-
   /// True if the sampling is completed
-  bool _is_sampling_completed;
+  bool & _is_sampling_completed;
 
 private:
   /// Track the current step of the main App
@@ -93,17 +90,17 @@ private:
   const std::vector<std::vector<Real>> & _inputs;
 
   /// Ensure that the MCMC algorithm proceeds in a sequential fashion
-  int _check_step;
+  int & _check_step;
 
   /// For proposing the next sample in the MCMC algorithm
-  std::vector<Real> _prev_value;
+  std::vector<Real> & _prev_value;
 
   /// Storage for means of input values for proposing the next sample
-  std::vector<Real> _mean_sto;
+  std::vector<Real> & _mean_sto;
 
   /// Storage for standard deviations of input values for proposing the next sample
-  std::vector<Real> _std_sto;
+  std::vector<Real> & _std_sto;
 
   /// Storage for previously accepted samples by the decision reporter system
-  std::vector<std::vector<Real>> _inputs_sto;
+  std::vector<std::vector<Real>> & _inputs_sto;
 };

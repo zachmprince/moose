@@ -95,6 +95,7 @@ GaussianProcessHandler::setupStoredMatrices(const RealEigenMatrix & input)
 {
   _K_cho_decomp = _K.llt();
   _K_results_solve = _K_cho_decomp.solve(input);
+  _K_decomp_valid = true;
 }
 
 void
@@ -471,8 +472,12 @@ dataStore(std::ostream & stream, StochasticTools::GaussianProcessHandler & gp_ut
   dataStore(stream, gp_utils.hyperparamVectorMap(), context);
   dataStore(stream, gp_utils.covarType(), context);
   dataStore(stream, gp_utils.K(), context);
-  dataStore(stream, gp_utils.KResultsSolve(), context);
-  dataStore(stream, gp_utils.KCholeskyDecomp(), context);
+  dataStore(stream, gp_utils.kDecompValid(), context);
+  if (gp_utils.kDecompValid())
+  {
+    dataStore(stream, gp_utils.KResultsSolve(), context);
+    dataStore(stream, gp_utils.KCholeskyDecomp(), context);
+  }
   dataStore(stream, gp_utils.paramStandardizer(), context);
   dataStore(stream, gp_utils.dataStandardizer(), context);
 }
@@ -485,8 +490,12 @@ dataLoad(std::istream & stream, StochasticTools::GaussianProcessHandler & gp_uti
   dataLoad(stream, gp_utils.hyperparamVectorMap(), context);
   dataLoad(stream, gp_utils.covarType(), context);
   dataLoad(stream, gp_utils.K(), context);
-  dataLoad(stream, gp_utils.KResultsSolve(), context);
-  dataLoad(stream, gp_utils.KCholeskyDecomp(), context);
+  dataLoad(stream, gp_utils.kDecompValid(), context);
+  if (gp_utils.kDecompValid())
+  {
+    dataLoad(stream, gp_utils.KResultsSolve(), context);
+    dataLoad(stream, gp_utils.KCholeskyDecomp(), context);
+  }
   dataLoad(stream, gp_utils.paramStandardizer(), context);
   dataLoad(stream, gp_utils.dataStandardizer(), context);
 }

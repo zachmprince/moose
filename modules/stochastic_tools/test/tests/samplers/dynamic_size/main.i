@@ -14,7 +14,7 @@
     type = TestDynamicNumberOfSubAppsSampler
     num_rows = 5
     distributions = 'uniform'
-    execute_on = 'INITIAL TIMESTEP_END'
+    execute_on = 'TIMESTEP_BEGIN'
   []
 []
 

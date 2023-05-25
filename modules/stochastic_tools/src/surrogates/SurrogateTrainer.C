@@ -277,19 +277,25 @@ SurrogateTrainer::crossValidate()
   std::vector<dof_id_type> split_ids_buffer;
   for (const auto & k : make_range(_n_splits))
   {
+    _skip_indices.clear();
     if (processor_id() == 0)
       split_ids_buffer = split_indices[k];
     _communicator.broadcast(split_ids_buffer, 0);
 
     _current_sample_size = _sampler.getNumberOfRows() - split_ids_buffer.size();
 
-    auto first = std::lower_bound(
-        split_ids_buffer.begin(), split_ids_buffer.end(), _sampler.getLocalRowBegin());
-    auto last = std::upper_bound(
-        split_ids_buffer.begin(), split_ids_buffer.end(), _sampler.getLocalRowEnd());
-    _skip_indices.insert(_skip_indices.begin(), first, last);
+    if (_sampler.getNumberOfLocalRows() > 0)
+    {
+      auto first = std::lower_bound(
+          split_ids_buffer.begin(), split_ids_buffer.end(), _sampler.getLocalRowBegin());
+      auto last = std::upper_bound(
+          split_ids_buffer.begin(), split_ids_buffer.end(), _sampler.getLocalRowEnd() - 1);
+      _skip_indices.insert(_skip_indices.begin(), first, last);
 
-    _local_sample_size = _sampler.getNumberOfLocalRows() - _skip_indices.size();
+      _local_sample_size = _sampler.getNumberOfLocalRows() - _skip_indices.size();
+    }
+    else
+      _local_sample_size = 0;
 
     // Train the model
     executeTraining();
@@ -326,6 +332,9 @@ SurrogateTrainer::crossValidate()
         skipped_row++;
       }
     }
+    auto nmse = split_mse.size();
+    gatherMax(nmse);
+    split_mse.resize(nmse, 0.0);
     gatherSum(split_mse);
 
     // Expand cv_score if necessary.

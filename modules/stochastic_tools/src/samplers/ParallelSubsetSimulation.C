@@ -36,10 +36,6 @@ ParallelSubsetSimulation::validParams()
                                 "Number of Markov chains to run in parallel, default is based on "
                                 "the number of processors used.");
   params.addParam<bool>("use_absolute_value", false, "Use absolute value of the sub app output");
-  params.addParam<unsigned int>(
-      "num_random_seeds",
-      100000,
-      "Initialize a certain number of random seeds. Change from the default only if you have to.");
   return params;
 }
 
@@ -50,14 +46,17 @@ ParallelSubsetSimulation::ParallelSubsetSimulation(const InputParameters & param
     _num_subsets(getParam<unsigned int>("num_subsets")),
     _use_absolute_value(getParam<bool>("use_absolute_value")),
     _subset_probability(getParam<Real>("subset_probability")),
-    _num_random_seeds(getParam<unsigned int>("num_random_seeds")),
     _outputs(getReporterValue<std::vector<Real>>("output_reporter")),
     _inputs(getReporterValue<std::vector<std::vector<Real>>>("inputs_reporter")),
     _step(getCheckedPointerParam<FEProblemBase *>("_fe_problem_base")->timeStep()),
     _count_max(std::floor(1 / _subset_probability)),
-    _check_step(0),
-    _subset(0),
-    _is_sampling_completed(false)
+    _check_step(declareRestartableData<int>("_check_step", 0)),
+    _subset(declareRestartableData<unsigned int>("_subset", 0)),
+    _is_sampling_completed(declareRestartableData<bool>("_is_sampling_completed", false)),
+    _inputs_sto(declareRestartableData<std::vector<std::vector<Real>>>("_inputs_sto")),
+    _outputs_sto(declareRestartableData<std::vector<Real>>("_outputs_sto")),
+    _inputs_sorted(declareRestartableData<std::vector<std::vector<Real>>>("_inputs_sorted")),
+    _markov_seed(declareRestartableData<std::vector<std::vector<Real>>>("_markov_seed"))
 {
   // Fixing the number of rows to the number of processors
   const dof_id_type nchains = isParamValid("num_parallel_chains")
@@ -78,6 +77,9 @@ ParallelSubsetSimulation::ParallelSubsetSimulation(const InputParameters & param
   // Setting the number of columns in the sampler matrix (equal to the number of distributions).
   setNumberOfCols(_distributions.size());
 
+  if (_app.isRecovering() || _app.isRestarting())
+    return;
+
   /* `inputs_sto` is a member variable that aids in deciding the next set of samples
   in the Subset Simulation algorithm by storing the input parameter values*/
   _inputs_sto.resize(_distributions.size(), std::vector<Real>(_num_samplessub, 0.0));
@@ -92,7 +94,7 @@ ParallelSubsetSimulation::ParallelSubsetSimulation(const InputParameters & param
   the next set of Markov chain samples.*/
   _markov_seed.resize(_distributions.size());
 
-  setNumberOfRandomSeeds(_num_random_seeds);
+  setNumberOfRandomSeeds(_num_subsets * (_num_samplessub / nchains) * 2 + 1);
 }
 
 const unsigned int &

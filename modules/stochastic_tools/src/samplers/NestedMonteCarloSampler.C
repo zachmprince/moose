@@ -74,6 +74,9 @@ NestedMonteCarloSampler::sampleSetUp(const SampleMode mode)
       break;
 
     const dof_id_type target_row = std::floor(getLocalRowBegin() / mod) * mod;
+    if (target_row < curr_row)
+      break;
+
     advanceGenerators((target_row - curr_row) * getNumberOfCols());
     for (const auto & j : make_range(getNumberOfCols()))
       computeSample(target_row, j);

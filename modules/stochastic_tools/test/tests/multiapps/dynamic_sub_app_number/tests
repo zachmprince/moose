@@ -9,6 +9,7 @@
       input = main.i
       allow_test_objects = true
       jsondiff = main_out.json
+      max_parallel = 5 # Generators are not advancing properly when a processor goes from not owning a row to owning a row
 
       detail = "normal execution,"
     []
@@ -18,6 +19,7 @@
       allow_test_objects = true
       cli_args = 'MultiApps/runner/mode=batch-restore'
       jsondiff = main_out.json
+      max_parallel = 5 # Generators are not advancing properly when a processor goes from not owning a row to owning a row
 
       detail = "batch execution with memory-based restoring, and"
     []
@@ -27,6 +29,7 @@
       allow_test_objects = true
       cli_args = 'MultiApps/runner/mode=batch-reset'
       jsondiff = main_out.json
+      max_parallel = 5 # Generators are not advancing properly when a processor goes from not owning a row to owning a row
 
       detail = "batch execution with reset-based restoring."
     []

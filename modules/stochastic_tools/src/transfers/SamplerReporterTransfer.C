@@ -121,6 +121,7 @@ SamplerReporterTransfer::intitializeStochasticReporters()
 
   _converged = &_results->declareStochasticReporter<bool>(
       prefix + (prefix.empty() ? "" : ":") + "converged", *_sampler_ptr);
+  _converged->assign(_converged->size(), true);
 }
 
 void

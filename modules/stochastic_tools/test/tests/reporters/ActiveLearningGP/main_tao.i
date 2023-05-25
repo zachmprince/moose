@@ -27,6 +27,7 @@
     flag_sample = 'conditional/flag_sample'
     seed = 12
     num_samples = 20
+    num_random_seeds = 100 # This speeds up recover test
     execute_on = PRE_MULTIAPP_SETUP
   []
 []
@@ -112,6 +113,7 @@
 
 [Executioner]
   type = Transient
+  num_steps = 30 # Arbitrary value between 20 and 40 for recover test
 []
 
 [Outputs]

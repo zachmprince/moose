@@ -380,6 +380,12 @@ public:
    */
   void setAppOutputFileBase();
 
+  /**
+   * Overridable function to tell the dataStore method to backup with the latest state of
+   * sub-applications. This should be false if apps are expected to start from an un-solved state.
+   */
+  virtual bool shouldRecoverApps() const { return true; }
+
 protected:
   /// function that provides cli_args to subapps
   virtual std::vector<std::string> cliArgs() const { return _cli_args; }

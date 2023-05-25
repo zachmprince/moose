@@ -60,9 +60,12 @@ ActiveLearningGPDecision::ActiveLearningGPDecision(const InputParameters & param
         declareValue<std::vector<Real>>("gp_mean", std::vector<Real>(sampler().getNumberOfRows()))),
     _gp_std(
         declareValue<std::vector<Real>>("gp_std", std::vector<Real>(sampler().getNumberOfRows()))),
-    _decision(true),
+    _decision(declareRestartableData<bool>("_decision", true)),
     _inputs_global(getGlobalInputData()),
-    _outputs_global(getGlobalOutputData())
+    _outputs_global(getGlobalOutputData()),
+    _inputs_batch(declareRestartableData<std::vector<std::vector<Real>>>("_inputs_batch")),
+    _outputs_batch(declareRestartableData<std::vector<Real>>("_outputs_batch")),
+    _is_recovering(_app.isRecovering() || _app.isRestarting())
 {
   if (_learning_function == "Ufunction" &&
       !parameters.isParamSetByUser("learning_function_parameter"))
@@ -120,6 +123,9 @@ ActiveLearningGPDecision::preNeedSample()
     if (_step > _n_train)
       _al_gp.reTrain(_inputs_batch, _outputs_batch);
   }
+  else if (_is_recovering)
+    _al_gp.reTrain(_inputs_batch, _outputs_batch);
+  _is_recovering = false;
 
   // Gather inputs for the current step
   _inputs = _inputs_global;

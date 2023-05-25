@@ -169,7 +169,9 @@ SamplerFullSolveMultiApp::solveStepBatch(Real dt, Real target_time, bool auto_ad
        i < _rank_config.first_local_sim_index + _rank_config.num_local_sims;
        ++i)
   {
-    updateRowData(_local_batch_app_index);
+    // The row is already up to date on the first sim if there are command-line arguments
+    if (!(i == _rank_config.first_local_sim_index && cliArgs().size() > 0) || _solved_once)
+      updateRowData(_local_batch_app_index);
 
     bool run = true;
     if (_should_run)

@@ -17,7 +17,7 @@
       input = main.i
       jsondiff = main_out.json
       allow_test_objects = true
-
+      max_parallel = 5 # Generators are not advancing properly when a processor goes from not owning a row to owning a row
       detail = "that are dynamic in size."
     []
   []

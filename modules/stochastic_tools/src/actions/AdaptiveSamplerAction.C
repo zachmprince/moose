@@ -56,8 +56,8 @@ AdaptiveSamplerAction::act()
     params.set<SamplerName>("sampler") = sampler_name;
     params.set<ExecFlagEnum>("execute_on") = {EXEC_TIMESTEP_END};
     params.set<std::vector<OutputName>>("outputs") = {"none"};
-    _problem->addUserObject("AdaptiveSamplingCompletedPostprocessor",
-                            adaptiveSamplingCompletedPostprocessorName(),
-                            params);
+    _problem->addPostprocessor("AdaptiveSamplingCompletedPostprocessor",
+                               adaptiveSamplingCompletedPostprocessorName(),
+                               params);
   }
 }

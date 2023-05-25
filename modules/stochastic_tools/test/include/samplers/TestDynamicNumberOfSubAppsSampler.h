@@ -20,4 +20,5 @@ public:
 
 protected:
   const dof_id_type _increment_rows;
+  const int & _step;
 };

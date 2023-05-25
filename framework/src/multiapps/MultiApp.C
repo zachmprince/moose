@@ -1105,15 +1105,6 @@ MultiApp::createApp(unsigned int i, Real start_time)
   app->setGlobalTimeOffset(start_time);
   app->setInputFileName(input_file);
   app->setOutputFileNumbers(_app.getOutputWarehouse().getFileNumbers());
-  app->setRestart(_app.isRestarting());
-  app->setRecover(_app.isRecovering());
-
-  // This means we have a backup of this app that we need to give to it
-  // Note: This won't do the restoration immediately.  The Backup
-  // will be cached by the MooseApp object so that it can be used
-  // during FEProblemBase::initialSetup() during initialSetup()
-  if (_app.isRestarting() || _app.isRecovering())
-    app->setBackupObject(_backups[i]);
 
   if (_use_positions && getParam<bool>("output_in_position"))
     app->setOutputPosition(_app.getOutputPosition() + _positions[_first_local_app + i]);
@@ -1123,6 +1114,25 @@ MultiApp::createApp(unsigned int i, Real start_time)
 
   // Update the MultiApp level for the app that was just created
   app->setupOptions();
+
+  if (shouldRecoverApps())
+  {
+    app->setRestart(_app.isRestarting());
+    app->setRecover(_app.isRecovering());
+
+    // This means we have a backup of this app that we need to give to it
+    // Note: This won't do the restoration immediately.  The Backup
+    // will be cached by the MooseApp object so that it can be used
+    // during FEProblemBase::initialSetup() during initialSetup()
+    if (_app.isRestarting() || _app.isRecovering())
+      app->setBackupObject(_backups[i]);
+  }
+  else
+  {
+    app->setRestart(false);
+    app->setRecover(false);
+  }
+
   // if multiapp does not have file base in Outputs input block, output file base will
   // be empty here since setupOptions() does not set the default file base with the multiapp
   // input file name. Parent app will create the default file base for multiapp by taking the

@@ -27,6 +27,7 @@
     flag_sample = 'conditional/flag_sample'
     seed = 5
     num_samples = 20
+    num_random_seeds = 100 # This speeds up recover test
     execute_on = PRE_MULTIAPP_SETUP
   []
 []
@@ -48,7 +49,6 @@
     to_multi_app = sub
     sampler = mc
     parameters = 'Materials/conductivity/prop_values Kernels/source/value BCs/right/value'
-    to_control = 'stochastic'
     check_multiapp_execute_on = false
   []
   [reporter_transfer]
@@ -89,7 +89,7 @@
     tuning_algorithm = 'adam'
     iter_adam = 1000
     learning_rate_adam = 0.005
-    # show_optimization_details = true
+    show_optimization_details = true
   []
 []
 
@@ -111,6 +111,7 @@
 
 [Executioner]
   type = Transient
+  num_steps = 30 # Arbitrary value between 20 and 40 for recover test
 []
 
 [Outputs]

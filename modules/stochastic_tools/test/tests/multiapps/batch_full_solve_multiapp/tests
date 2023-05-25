@@ -6,6 +6,7 @@
     input = parent_full_solve.i
     csvdiff = parent_full_solve_out_storage_0002.csv
     cli_args = MultiApps/runner/mode=normal
+    recover = false
     requirement = "The system shall support pulling postprocessor data from a sub-application for "
                   "each row of sampled data."
   []
@@ -14,6 +15,7 @@
     type = CheckFiles
     input = parent_full_solve.i
     check_files = 'parent_full_solve_out_runner0.e parent_full_solve_out_runner1.e parent_full_solve_out_runner2.e parent_full_solve_out_runner3.e parent_full_solve_out_runner4.e'
+    recover = false
     requirement = "The system shall support running sub-applications in batches."
   []
 
@@ -26,6 +28,7 @@
       input = parent_full_solve.i
       csvdiff = parent_full_solve_out_storage_0002.csv
       max_parallel = 1
+      recover = false
 
       detail = 'on a single processor,'
     []
@@ -35,6 +38,7 @@
       csvdiff = parent_full_solve_out_storage_0002.csv
       max_parallel = 2
       min_parallel = 2
+      recover = false
 
       detail = 'on multiple processors, and'
     []
@@ -44,6 +48,7 @@
       csvdiff = parent_full_solve_out_storage_0002.csv
       max_parallel = 2
       min_parallel = 2
+      recover = false
       cli_args = "MultiApps/runner/mode=batch-restore"
 
       detail = 'on multiple processors using in-memory backup.'

@@ -64,6 +64,7 @@
       input = trainer.i
       allow_test_objects = true
       cli_args = 'Trainers/pod_rb/execute_on="final"'
+      max_parallel = 3
       detail = 'and the residual generation is called before having the basis vectors.'
       expect_err = "There are no basis vectors available for residual generation. This indicates that the bases have not been created yet. The most common cause of this error is the wrong setting of the 'execute_on' flags in the PODFullSolveMultiApp and/or PODReducedBasisTrainer."
       match_literal = true

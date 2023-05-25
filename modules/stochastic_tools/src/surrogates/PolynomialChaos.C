@@ -132,6 +132,7 @@ PolynomialChaos::powerExpectation(const unsigned int n) const
     val += tmp;
   }
 
+  comm().sum(val);
   return val;
 }
 
@@ -206,6 +207,7 @@ PolynomialChaos::computeSobolIndex(const std::set<unsigned int> & ind) const
     val += tmp;
   }
 
+  comm().sum(val);
   return val;
 }
 
@@ -222,6 +224,7 @@ PolynomialChaos::computeSobolTotal(const unsigned int dim) const
     if (_tuple[i][dim] > 0)
       val += _coeff[i] * _coeff[i] * _poly[dim]->innerProduct(_tuple[i][dim]);
 
+  comm().sum(val);
   return val;
 }
 

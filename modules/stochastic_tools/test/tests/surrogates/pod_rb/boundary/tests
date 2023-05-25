@@ -9,6 +9,7 @@
       input = trainer.i
       check_files = 'trainer_out_pod_rb.rd'
       allow_test_objects = true
+      max_parallel = 5
       detail = 'training using known 4D data '
     []
     [load]

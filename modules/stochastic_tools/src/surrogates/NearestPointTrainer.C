@@ -71,6 +71,10 @@ NearestPointTrainer::postTrain()
   for (auto & it : _sample_points)
     _communicator.allgather(it);
 
+  auto nvals = _sample_results.size();
+  gatherMax(nvals);
+  if (_sample_results.size() < nvals)
+    _sample_results.resize(nvals, std::vector<Real>(getLocalSampleSize(), 0.0));
   for (auto & it : _sample_results)
     _communicator.allgather(it);
 }

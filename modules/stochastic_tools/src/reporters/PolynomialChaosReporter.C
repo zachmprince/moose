@@ -188,7 +188,6 @@ PCStatisticsContext<OutType>::finalize()
   // Kurtosis
   else if (_stat == "kurtosis")
     val = _pc.powerExpectation(4) / (sig * sig * sig * sig);
-  this->_communicator.sum(val);
 
   ReporterGeneralContext<std::pair<OutType, std::vector<OutType>>>::finalize();
 }

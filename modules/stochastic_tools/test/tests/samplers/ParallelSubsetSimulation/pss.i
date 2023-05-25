@@ -66,6 +66,7 @@
 
 [Executioner]
   type = Transient
+  num_steps = 101 # Arbitrary value between 60 and 120 to test recovery
 []
 
 [Outputs]

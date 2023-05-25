@@ -41,15 +41,23 @@ ActiveLearningMonteCarloSampler::ActiveLearningMonteCarloSampler(const InputPara
   : Sampler(parameters),
     ReporterInterface(this),
     _flag_sample(getReporterValue<std::vector<bool>>("flag_sample")),
+    _is_sampling_completed(declareRestartableData<bool>("_is_sampling_completed", false)),
     _step(getCheckedPointerParam<FEProblemBase *>("_fe_problem_base")->timeStep()),
     _num_batch(getParam<dof_id_type>("num_batch")),
-    _check_step(std::numeric_limits<int>::min()),
-    _num_samples(getParam<int>("num_samples"))
+    _check_step(declareRestartableData<int>("_check_step", std::numeric_limits<int>::min())),
+    _num_samples(getParam<int>("num_samples")),
+    _retraining_steps(declareRestartableData<int>("_retraining_steps", 0)),
+    _inputs_sto(declareRestartableData<std::vector<std::vector<Real>>>("_inputs_sto")),
+    _inputs_gp_fails(declareRestartableData<std::vector<std::vector<Real>>>("_inputs_gp_fails"))
 {
   for (const DistributionName & name : getParam<std::vector<DistributionName>>("distributions"))
     _distributions.push_back(&getDistributionByName(name));
   setNumberOfRows(_num_batch);
   setNumberOfCols(_distributions.size());
+
+  if (_app.isRestarting() || _app.isRecovering())
+    return;
+
   _inputs_sto.resize(_num_batch, std::vector<Real>(_distributions.size()));
   setNumberOfRandomSeeds(getParam<unsigned int>("num_random_seeds"));
 }
