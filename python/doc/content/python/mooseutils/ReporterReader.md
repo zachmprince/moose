@@ -1,4 +1,4 @@
 # ReporterReader
 
 
-!pysyntax class name=mooseutils.ReporterReader
+!pysyntax class name=mooseutils.ReporterReader.ReporterReader

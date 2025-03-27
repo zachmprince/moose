@@ -16,7 +16,7 @@ from mooseutils import message
 
 class Node(moosetree.Node):
     """
-    An [moosetree/Node.md#moosetree.node] object for building a [!ac](HIT) tree.
+    An [moosetree/Node.md#moosetree.node.node] object for building a [!ac](HIT) tree.
 
     Add a new node to the input file tree that is a child of *parent*. The supplied *parent* must
     be `pyhit.Node` object. The *hitnode* is name of the node, as a string.

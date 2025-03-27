@@ -192,7 +192,7 @@ From this, we can see that we had 14 residual solve evaluations that took 38.3% 
 
 ## Reference
 
-!pysyntax class name=mooseutils.PerfGraphReporterReader
+!pysyntax class name=mooseutils.PerfGraphReporterReader.PerfGraphReporterReader
 
 !pysyntax class name=mooseutils.PerfGraphNode
 
