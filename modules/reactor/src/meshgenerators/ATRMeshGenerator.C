@@ -103,6 +103,11 @@ ATRMeshGenerator::generateFluxTraps(ReplicatedMesh & mesh)
 {
   _flux_traps.resize(7);
   _flux_traps[0] = std::make_unique<FluxTrap1>(northwest_trap, _fuel_elements);
+  _flux_traps[1] = std::make_unique<FluxTrap2>(north_trap, _fuel_elements);
+  _flux_traps[2] = std::make_unique<FluxTrap2>(west_trap, _fuel_elements);
+  _flux_traps[3] = std::make_unique<FluxTrap2>(southwest_trap, _fuel_elements);
+  _flux_traps[4] = std::make_unique<FluxTrap2>(southeast_trap, _fuel_elements);
+  _flux_traps[5] = std::make_unique<FluxTrap3>(northeast_trap, _fuel_elements);
 
   for (auto & flux_trap : _flux_traps)
     if (flux_trap)
@@ -392,9 +397,7 @@ void
 ATRMeshGenerator::FuelElement::addSidePlateNodes(const std::vector<Node *> & new_nodes,
                                                  bool is_right)
 {
-  if (_flipped)
-    is_right = !is_right;
-
+  is_right = is_right != _flipped;
   std::vector<Node *> & side_plate_nodes =
       is_right ? _right_side_plate_nodes : _left_side_plate_nodes;
 
@@ -404,9 +407,10 @@ ATRMeshGenerator::FuelElement::addSidePlateNodes(const std::vector<Node *> & new
   for (std::size_t i = 0, k = 0; i < _base.numRadii(); ++i)
     for (std::size_t j = 0; j < num_side_plate_segments; ++j, ++k)
     {
-
       const auto col = is_right ? j : j + num_side_plate_segments - 1;
-      const auto knew = i * (num_side_plate_segments - 1) * 2 + col;
+      auto knew = i * (num_side_plate_segments - 1) * 2 + col;
+      if (_flipped)
+        knew = (new_nodes.size() - 1) - knew;
       side_plate_nodes[k] = new_nodes[knew];
     }
 }
@@ -522,6 +526,9 @@ void
 ATRMeshGenerator::FluxTrap1::generate(ReplicatedMesh & mesh)
 {
   using namespace ATRMeshing;
+  const auto layer_radii = layerRadii();
+  mooseAssert(std::is_sorted(layer_radii.rbegin(), layer_radii.rend()),
+              "Layer radii are not sorted properly.");
   std::vector<std::vector<Node *>> outer_nodes(layer_radii.size() + 1,
                                                std::vector<Node *>(numRimNodes()));
   outer_nodes[0] = getRimNodes(mesh);
@@ -542,7 +549,37 @@ ATRMeshGenerator::FluxTrap1::generate(ReplicatedMesh & mesh)
                                                      3);
     }
 
-  meshDiskWithQuad(mesh, outer_nodes.back(), 10, layer_radii.back(), _center, 4);
+  const Real avg_layer_thickness = (layer_radii.front() - layer_radii.back()) / layer_radii.size();
+  const unsigned int num_layers = std::ceil(layer_radii.back() / 2 / avg_layer_thickness);
+  meshDiskWithQuad(mesh, outer_nodes.back(), num_layers, layer_radii.back(), _center, 4);
+}
+
+void
+ATRMeshGenerator::FluxTrap3::generate(ReplicatedMesh & mesh)
+{
+  using namespace ATRMeshing;
+  constexpr std::array<Real, 4> layer_radii = {7.46125, 6.82625, 6.511925, 6.181725};
+  mooseAssert(std::is_sorted(layer_radii.rbegin(), layer_radii.rend()),
+              "Layer radii are not sorted properly.");
+  std::vector<std::vector<Node *>> outer_nodes(layer_radii.size() + 1,
+                                               std::vector<Node *>(numRimNodes()));
+  outer_nodes[0] = getRimNodes(mesh);
+  for (const auto i : make_range(layer_radii.size()))
+    for (const auto j : make_range(numRimNodes()))
+      outer_nodes[i + 1][j] = mesh.add_point(computePoint(getAngle(j), layer_radii[i], _center));
+
+  for (const auto i : make_range(layer_radii.size()))
+    for (const auto j : make_range(numRimNodes()))
+    {
+      auto elem = mesh.add_elem(std::make_unique<Quad4>());
+      const auto jp1 = j < numRimNodes() - 1 ? j + 1 : 0;
+      FillBetweenPointVectorsTools::buildQuadElement(elem,
+                                                     outer_nodes[i + 1][j],
+                                                     outer_nodes[i + 1][jp1],
+                                                     outer_nodes[i][jp1],
+                                                     outer_nodes[i][j],
+                                                     3);
+    }
 }
 
 namespace ATRMeshing

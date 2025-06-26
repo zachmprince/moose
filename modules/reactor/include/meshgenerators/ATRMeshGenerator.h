@@ -125,11 +125,50 @@ protected:
     {
     }
 
-    virtual void generate(ReplicatedMesh & mesh) override;
+    virtual std::vector<Real> layerRadii() const
+    {
+      return {7.46125, 6.82625, 6.26364, 5.84454, 5.74294, 5.08, 4.49834};
+    };
 
-  private:
-    static constexpr std::array<Real, 7> layer_radii = {
-        7.46125, 6.82625, 6.26364, 5.84454, 5.74294, 5.08, 4.49834};
+    virtual void generate(ReplicatedMesh & mesh) override;
+  };
+
+  /// North, West, Southwest, and Southeast Flux Trap
+  class FluxTrap2 : public FluxTrap1
+  {
+  public:
+    FluxTrap2(Point center, const std::vector<std::unique_ptr<FuelElement>> & fuel_elements)
+      : FluxTrap1(center, fuel_elements)
+    {
+    }
+
+    virtual std::vector<Real> layerRadii() const override
+    {
+      return {7.46125,
+              6.82625,
+              6.4262,
+              5.7912,
+              4.7625,
+              4.1275,
+              3.65125,
+              3.34137,
+              3.2131,
+              2.69621,
+              2.38125,
+              2.21615};
+    };
+  };
+
+  /// Northeast Flux Trap
+  class FluxTrap3 : public FluxTrap
+  {
+  public:
+    FluxTrap3(Point center, const std::vector<std::unique_ptr<FuelElement>> & fuel_elements)
+      : FluxTrap(center, fuel_elements)
+    {
+    }
+
+    virtual void generate(ReplicatedMesh & mesh) override;
   };
 
   void generateFuel(ReplicatedMesh & mesh);
