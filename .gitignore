@@ -370,3 +370,11 @@ OutputData
 
 # PETSc binary output
 binaryoutput
+
+# Python distribution/packaging
+*.egg-info
+develop-eggs
+dist
+sdist
+wheels
+wheelhouse
