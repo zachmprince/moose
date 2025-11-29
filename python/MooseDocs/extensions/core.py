@@ -18,7 +18,7 @@ import moosetree
 
 from ..base import components, renderers, Executioner, Extension
 from ..common import exceptions
-from ..tree import tokens, html, latex
+from ..tree import tokens, html, latex, markdown
 
 LOG = logging.getLogger(__name__)
 
@@ -493,6 +493,9 @@ class RenderHeading(components.RenderComponent):
             latex.Command(sec, "label", string=id_, escape=False)
         return sec
 
+    def createMarkdown(self, parent, token, page):
+        return markdown.Heading(parent, level=token["level"])
+
 
 class RenderCode(components.RenderComponent):
     def createReveal(self, parent, token, page):
@@ -525,6 +528,11 @@ class RenderCode(components.RenderComponent):
             info=token.info,
         )
 
+    def createMarkdown(self, parent, token, page):
+        return markdown.CodeBlock(
+            parent, content=token["content"].strip("\n"), language=token["language"]
+        )
+
 
 class RenderShortcutLink(components.RenderComponent):
     def createHTML(self, parent, token, page):
@@ -550,6 +558,13 @@ class RenderShortcutLink(components.RenderComponent):
             )
         return h
 
+    def createMarkdown(self, parent, token, page):
+        node = self._getShortcut(page, token["key"])
+        link = markdown.Link(parent, url=node["link"])
+        for child in node.children:
+            self.renderer.render(link, child, page)
+        return link
+
     @staticmethod
     def _getShortcut(page, key):
         """Helper to find Shortcut tokens added to the page attributes by the Shortcut extension."""
@@ -567,6 +582,9 @@ class RenderShortcut(components.RenderComponent):
     def createLatex(self, *args):
         pass
 
+    def createMarkdown(self, parent, token, page):
+        pass
+
 
 class RenderMonospace(components.RenderComponent):
     def createHTML(self, parent, token, page):
@@ -579,6 +597,9 @@ class RenderMonospace(components.RenderComponent):
         latex.String(code, content=token["content"])
         return
 
+    def createMarkdown(self, parent, token, page):
+        return markdown.Code(parent, content=token["content"])
+
 
 class RenderBreak(components.RenderComponent):
     def createHTML(self, parent, token, page):
@@ -587,6 +608,9 @@ class RenderBreak(components.RenderComponent):
     def createLatex(self, parent, token, page):
         return latex.String(parent, content=" ")
 
+    def createMarkdown(self, parent, token, page):
+        return markdown.MarkdownNode(parent, pf_cls="SoftBreak")
+
 
 class RenderLineBreak(components.RenderComponent):
     def createHTML(self, parent, token, page):
@@ -594,6 +618,9 @@ class RenderLineBreak(components.RenderComponent):
 
     def createLatex(self, parent, token, page):
         return latex.String(parent, content="\\\\")
+
+    def createMarkdown(self, parent, token, page):
+        return markdown.MarkdownNode(parent, pf_cls="LineBreak")
 
 
 class RenderLink(components.RenderComponent):
@@ -615,6 +642,9 @@ class RenderLink(components.RenderComponent):
             )
         return cmd
 
+    def createMarkdown(self, parent, token, page):
+        return markdown.Link(parent, url=token["url"])
+
 
 class RenderParagraph(components.RenderComponent):
     def createHTML(self, parent, token, page):
@@ -623,6 +653,9 @@ class RenderParagraph(components.RenderComponent):
     def createLatex(self, parent, token, page):
         latex.Command(parent, "par", start="\n", end=" ", info=token.info)
         return parent
+
+    def createMarkdown(self, parent, token, page):
+        return markdown.Paragraph(parent)
 
 
 class RenderOrderedList(components.RenderComponent):
@@ -639,6 +672,9 @@ class RenderOrderedList(components.RenderComponent):
     def createLatex(self, parent, token, page):
         return latex.Environment(parent, "enumerate", after_begin="", info=token.info)
 
+    def createMarkdown(self, parent, token, page):
+        return markdown.MarkdownNode(parent, pf_cls="OrderedList")
+
 
 class RenderUnorderedList(components.RenderComponent):
     def createHTML(self, parent, token, page):
@@ -654,6 +690,9 @@ class RenderUnorderedList(components.RenderComponent):
     def createLatex(self, parent, token, page):
         return latex.Environment(parent, "itemize", after_begin="", info=token.info)
 
+    def createMarkdown(self, parent, token, page):
+        return markdown.MarkdownNode(parent, pf_cls="BulletList")
+
 
 class RenderListItem(components.RenderComponent):
     def createHTML(self, parent, token, page):
@@ -662,6 +701,9 @@ class RenderListItem(components.RenderComponent):
     def createLatex(self, parent, token, page):
         latex.Command(parent, "item", start="\n", end=" ")
         return parent
+
+    def createMarkdown(self, parent, token, page):
+        return markdown.MarkdownNode(parent, pf_cls="ListItem")
 
 
 class RenderString(components.RenderComponent):
@@ -673,6 +715,9 @@ class RenderString(components.RenderComponent):
     def createLatex(self, parent, token, page):
         return latex.String(parent, content=token["content"])
 
+    def createMarkdown(self, parent, token, page):
+        return markdown.Text(parent, content=token["content"])
+
 
 class RenderSpace(components.RenderComponent):
     def createHTML(self, parent, token, page):
@@ -680,6 +725,9 @@ class RenderSpace(components.RenderComponent):
 
     def createLatex(self, parent, token, page):
         return latex.String(parent, content=" " * token["count"])
+
+    def createMarkdown(self, parent, token, page):
+        return markdown.MarkdownNode(parent, pf_cls="Space")
 
 
 class RenderQuote(components.RenderComponent):
@@ -689,6 +737,9 @@ class RenderQuote(components.RenderComponent):
     def createLatex(self, parent, token, page):
         return latex.Environment(parent, "quote", after_begin="", info=token.info)
 
+    def createMarkdown(self, parent, token, page):
+        return markdown.MarkdownNode(parent, pf_cls="BlockQuote")
+
 
 class RenderStrong(components.RenderComponent):
     def createHTML(self, parent, token, page):
@@ -697,6 +748,9 @@ class RenderStrong(components.RenderComponent):
     def createLatex(self, parent, token, page):
         return latex.Command(parent, "textbf", info=token.info)
 
+    def createMarkdown(self, parent, token, page):
+        return markdown.MarkdownNode(parent, pf_cls="Strong")
+
 
 class RenderEmphasis(components.RenderComponent):
     def createHTML(self, parent, token, page):
@@ -704,6 +758,9 @@ class RenderEmphasis(components.RenderComponent):
 
     def createLatex(self, parent, token, page):
         return latex.Command(parent, "emph", info=token.info)
+
+    def createMarkdown(self, parent, token, page):
+        return markdown.MarkdownNode(parent, pf_cls="Emph")
 
 
 class RenderUnderline(components.RenderComponent):
@@ -721,6 +778,9 @@ class RenderUnderline(components.RenderComponent):
                 return parent
 
         return latex.Command(parent, "ul", info=token.info)
+
+    def createMarkdown(self, parent, token, page):
+        return markdown.MarkdownNode(parent, pf_cls="Underline")
 
 
 class RenderStrikethrough(components.RenderComponent):
@@ -740,6 +800,9 @@ class RenderStrikethrough(components.RenderComponent):
 
         return latex.Command(parent, "st", info=token.info)
 
+    def createMarkdown(self, parent, token, page):
+        return markdown.MarkdownNode(parent, pf_cls="Strikeout")
+
 
 class RenderSuperscript(components.RenderComponent):
     def createHTML(self, parent, token, page):
@@ -748,6 +811,9 @@ class RenderSuperscript(components.RenderComponent):
     def createLatex(self, parent, token, page):
         return latex.Command(parent, "textsuperscript", info=token.info)
 
+    def createMarkdown(self, parent, token, page):
+        return markdown.MarkdownNode(parent, pf_cls="Superscript")
+
 
 class RenderSubscript(components.RenderComponent):
     def createHTML(self, parent, token, page):
@@ -755,6 +821,9 @@ class RenderSubscript(components.RenderComponent):
 
     def createLatex(self, parent, token, page):
         return latex.Command(parent, "textsubscript", info=token.info)
+
+    def createMarkdown(self, parent, token, page):
+        return markdown.MarkdownNode(parent, pf_cls="Subscript")
 
 
 class RenderPunctuation(RenderString):
@@ -815,6 +884,9 @@ class RenderError(components.RenderComponent):
     def createLatex(self, parent, token, page):
         pass
 
+    def createMarkdown(self, parent, token, page):
+        pass
+
 
 class RenderDisabled(components.RenderComponent):
 
@@ -823,3 +895,6 @@ class RenderDisabled(components.RenderComponent):
 
     def createHTML(self, parent, token, page):
         return html.Tag(parent, token["tag"], class_="moose-disabled")
+
+    def createMarkdown(self, parent, token, page):
+        pass
