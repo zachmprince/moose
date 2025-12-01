@@ -9,7 +9,7 @@
 
 import re
 from ..base import components, LatexRenderer, MarkdownReader
-from ..tree import html, tokens, latex
+from ..tree import html, tokens, latex, markdown
 from . import command, floats
 
 
@@ -187,6 +187,9 @@ class RenderTable(components.RenderComponent):
         ]
         return latex.Environment(parent, "tabulary", start="\\par", args=args)
 
+    def createMarkdown(self, parent, token, page):
+        return markdown.Table(parent, alignment=token["form"])
+
 
 class RenderTag(components.RenderComponent):
     def __init__(self, tag):
@@ -211,6 +214,9 @@ class RenderTag(components.RenderComponent):
             latex.String(parent, content="\\bottomrule", escape=False)
         return items
 
+    def createMarkdown(self, parent, token, page):
+        return markdown.MarkdownNode(parent, token.name)
+
 
 class RenderItem(RenderTag):
     def createHTML(self, parent, token, page):
@@ -226,6 +232,9 @@ class RenderItem(RenderTag):
 
         return item
 
+    def createMarkdown(self, parent, token, page):
+        return markdown.TableCell(parent)
+
 
 class RenderTableFloat(floats.RenderFloat):
 
@@ -235,3 +244,6 @@ class RenderTableFloat(floats.RenderFloat):
         flt = floats.RenderFloat.createLatex(self, parent, token, page)
         latex.Command(flt, "center")
         return flt
+
+    def createMarkdown(self, parent, token, page):
+        return markdown.TableFloat(parent)

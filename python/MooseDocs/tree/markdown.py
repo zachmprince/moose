@@ -26,6 +26,7 @@ class MarkdownNode(NodeBase):
 
     DEFAULT_PF_CLASS: Optional[Type[pf.Element]] = None
     DEFAULT_PF_KWARGS: dict[str, str] = {}
+    ENSURE_CHILDREN_ARE_BLOCK = False
 
     def __init__(
         self,
@@ -64,18 +65,42 @@ class MarkdownNode(NodeBase):
     def children(self) -> list["MarkdownNode"]:
         return super().children
 
+    @property
+    def id(self) -> str:
+        return self["pf_kwargs"].get("identifier", None)
+
+    @id.setter
+    def id(self, val: Optional[str]):
+        if val is not None:
+            self["pf_kwargs"]["identifier"] = val
+        else:
+            self["pf_kwargs"].pop("identifier", None)
+
     def _materialize_children(self) -> list[pf.Element]:
         rendered = []
+        inline_results = []
         for child in self.children:
             assert isinstance(child, MarkdownNode)
 
-            result = child.to_panflute()
-            if result is None:
+            # Convert child to panflute object
+            results = child.to_panflute()
+            if results is None:
                 continue
-            if isinstance(result, (list, tuple)):
-                rendered.extend(result)
-            else:
-                rendered.append(result)
+            if not isinstance(results, (list, tuple)):
+                results = [results]
+
+            # Ensure children are blocks, if necessary
+            for result in results:
+                if self.ENSURE_CHILDREN_ARE_BLOCK and isinstance(result, pf.Inline):
+                    inline_results.append(result)
+                else:
+                    if inline_results:
+                        rendered.append(pf.Plain(*inline_results))
+                        inline_results = []
+                    rendered.append(result)
+        if inline_results:
+            rendered.append(pf.Plain(*inline_results))
+
         return rendered
 
     def to_panflute(self) -> pf.Element:
@@ -89,7 +114,7 @@ class MarkdownNode(NodeBase):
         elif isinstance(elem, pf.Block):
             doc = pf.Doc(elem)
         else:
-            doc = pf.Doc(pf.Para(elem))
+            doc = pf.Doc(pf.Plain(elem))
         # convert_text understands pf.Doc instances, so this yields raw markdown
         return pf.convert_text(doc, input_format="panflute", output_format="gfm")
 
@@ -98,24 +123,38 @@ class MarkdownDocument(MarkdownNode):
     """Root container that owns the panflute Doc."""
 
     DEFAULT_PF_CLASS = pf.Doc
+    ENSURE_CHILDREN_ARE_BLOCK = True
 
     def __init__(self, **kwargs):
         super().__init__(None, name="MarkdownDocument", **kwargs)
-
-    def to_panflute(self):
-        children = self._materialize_children()
-        sent_children = []
-        for child in children:
-            if not isinstance(child, pf.Block):
-                sent_children.append(pf.Para(child))
-            else:
-                sent_children.append(child)
-        return self._pf_cls(*sent_children, **self["pf_kwargs"])
 
 
 class Text(MarkdownNode):
     DEFAULT_PF_CLASS = pf.Str
     DEFAULT_PF_KWARGS = {"text": "content"}
+
+
+# Float classes necessary since parent-child relationship is reversed in panflute
+class TableFloat(MarkdownNode):
+    # This is arbitrary since we won't be using it
+    DEFAULT_PF_CLASS = pf.Table
+
+    def to_panflute(self):
+        table: "Table" = None
+        caption: "Caption" = None
+        for child in self.children:
+            assert isinstance(child, (Table, Caption))
+            if isinstance(child, Table):
+                assert table is None
+                table = child
+            elif isinstance(child, Caption):
+                assert caption is None
+                caption = child
+
+        if caption is not None:
+            table["pf_kwargs"]["caption"] = caption.to_panflute()
+        table.id = self.id
+        return table.to_panflute()
 
 
 # Convenience factories mirroring common markdown constructs
@@ -150,3 +189,45 @@ class CodeBlock(MarkdownNode):
 class Link(MarkdownNode):
     DEFAULT_PF_CLASS = pf.Link
     DEFAULT_PF_KWARGS = {"url": "url"}
+
+
+class Table(MarkdownNode):
+    DEFAULT_PF_CLASS = pf.Table
+    DEFAULT_PF_KWARGS = {"colspec": "alignment"}
+
+    ALIGNMENT_MAP = {
+        "left": "AlignLeft",
+        "right": "AlignRight",
+        "center": "AlignCenter",
+    }
+
+    def __init__(self, parent=None, alignment=None, **kwargs):
+        if alignment is not None:
+            alignment = [(self.ALIGNMENT_MAP[a], "ColWidthDefault") for a in alignment]
+
+        super().__init__(parent, alignment=alignment, **kwargs)
+
+    def to_panflute(self):
+        head = None
+        bodies = []
+        for child in self._materialize_children():
+            if isinstance(child, pf.TableHead):
+                head = child
+            elif isinstance(child, pf.TableBody):
+                bodies.append(child)
+            else:
+                raise ValueError(
+                    f"Children of {self.name} must be `TableHead` or `TableBody`, "
+                    f"not {type(child)}"
+                )
+        return self._pf_cls(*bodies, head=head, **self["pf_kwargs"])
+
+
+class TableCell(MarkdownNode):
+    DEFAULT_PF_CLASS = pf.TableCell
+    ENSURE_CHILDREN_ARE_BLOCK = True
+
+
+class Caption(MarkdownNode):
+    DEFAULT_PF_CLASS = pf.Caption
+    ENSURE_CHILDREN_ARE_BLOCK = True

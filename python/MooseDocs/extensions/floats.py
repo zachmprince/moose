@@ -15,7 +15,7 @@ import moosetree
 import MooseDocs
 from ..common import exceptions, report_error
 from ..base import components, MarkdownReader, LatexRenderer, Extension
-from ..tree import tokens, html, latex
+from ..tree import tokens, html, latex, markdown
 from . import core, command, heading
 
 LOG = logging.getLogger(__name__)
@@ -232,6 +232,19 @@ class RenderFloatCaption(components.RenderComponent):
         caption = latex.Command(parent, "caption")
         if token["key"]:
             latex.Command(caption, "label", string=token["key"], escape=False)
+        return caption
+
+    def createMarkdown(self, parent, token, page):
+        caption = markdown.Caption(parent)
+        prefix = token.get("prefix", None)
+        if prefix:
+            markdown.Text(
+                caption,
+                content=f"{prefix} {token['number']}: ",
+            )
+        assert isinstance(parent, markdown.MarkdownNode)
+        parent.id = token["key"]
+
         return caption
 
 
