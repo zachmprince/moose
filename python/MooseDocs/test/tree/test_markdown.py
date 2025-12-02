@@ -154,6 +154,20 @@ class TestMarkdownTree(unittest.TestCase):
         self.assertEqual(rows[3], "")
         self.assertEqual(rows[4], "This is a caption. {#tab:table_label}")
 
+    def test_alert(self):
+        alert = markdown.Alert()
+        markdown.Text(alert, content="[!NOTE]", raw=True)
+        markdown.MarkdownNode(alert, "LineBreak")
+        markdown.Text(
+            markdown.MarkdownNode(alert, "Strong"),
+            content="Alert title",
+        )
+        markdown.Text(markdown.Paragraph(alert), content="Alert content")
+
+        content = alert.write()
+        expected = r"^> \[\!NOTE\]\s*\n> \*\*Alert title\*\*\n>\n> Alert content$"
+        self.assertRegex(content, expected)
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)

@@ -130,8 +130,18 @@ class MarkdownDocument(MarkdownNode):
 
 
 class Text(MarkdownNode):
-    DEFAULT_PF_CLASS = pf.Str
     DEFAULT_PF_KWARGS = {"text": "content"}
+
+    def __init__(
+        self,
+        parent: Optional[MarkdownNode] = None,
+        content: str = "",
+        raw: bool = False,
+        **kwargs,
+    ):
+        super().__init__(
+            parent, pf_cls=pf.RawInline if raw else pf.Str, content=content, **kwargs
+        )
 
 
 # Float classes necessary since parent-child relationship is reversed in panflute
@@ -231,3 +241,9 @@ class TableCell(MarkdownNode):
 class Caption(MarkdownNode):
     DEFAULT_PF_CLASS = pf.Caption
     ENSURE_CHILDREN_ARE_BLOCK = True
+
+
+class Alert(MarkdownNode):
+    DEFAULT_PF_CLASS = pf.BlockQuote
+    ENSURE_CHILDREN_ARE_BLOCK = True
+

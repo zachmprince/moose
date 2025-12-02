@@ -9,7 +9,7 @@
 
 import os
 from ..base import components, LatexRenderer, HTMLRenderer, MarkdownReader
-from ..tree import tokens, html, latex
+from ..tree import tokens, html, latex, markdown
 from . import command, materialicon
 
 
@@ -171,6 +171,12 @@ class RenderAlertToken(components.RenderComponent):
         token(0).parent = None
         return env
 
+    def createMarkdown(self, parent, token, page):
+        alert = markdown.Alert(parent)
+        markdown.Text(alert, content=f"[!{token["brand"].upper()}]", raw=True)
+        markdown.MarkdownNode(alert, "LineBreak")
+        return alert
+
 
 class RenderAlertContent(components.RenderComponent):
 
@@ -184,6 +190,9 @@ class RenderAlertContent(components.RenderComponent):
         return content
 
     def createLatex(self, parent, token, page):
+        return parent
+
+    def createMarkdown(self, parent, token, page):
         return parent
 
 
@@ -230,3 +239,6 @@ class RenderAlertTitle(components.RenderComponent):
 
     def createLatex(self, parent, token, page):
         return parent
+
+    def createMarkdown(self, parent, token, page):
+        return markdown.MarkdownNode(parent, "Strong")
