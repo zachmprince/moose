@@ -8,7 +8,7 @@
 # https://www.gnu.org/licenses/lgpl-2.1.html
 
 import importlib.util
-from typing import Any, Optional, Type, TYPE_CHECKING
+from typing import TYPE_CHECKING, Optional, Type
 
 if TYPE_CHECKING:
     import panflute as pf

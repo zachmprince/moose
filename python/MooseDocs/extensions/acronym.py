@@ -12,7 +12,7 @@ import logging
 import moosetree
 from ..base import components, renderers
 from ..common import exceptions
-from ..tree import pages, tokens, html, latex
+from ..tree import pages, tokens, html, latex, markdown
 from . import command, table, floats
 
 LOG = logging.getLogger(__name__)
@@ -199,10 +199,21 @@ class RenderAcronymToken(components.RenderComponent):
         content = str(acro.key) if acro.used else "{} ({})".format(acro.name, acro.key)
         latex.String(parent, content=content)
 
+    def createMarkdown(self, parent, token, page):
+        acro = self.extension.getAcronym(token["acronym"])
+        if acro is None:
+            content = token["acronym"]
+            raise exceptions.MooseDocsException(
+                f"The acronym '{content}' was not found."
+            )
+        else:
+            content = str(acro.key) if acro.used else f"{acro.name} ({acro.key})"
+        markdown.Text(parent, content=content)
+
 
 class RenderAcronymListToken(components.RenderComponent):
 
-    def createHTML(self, parent, token, page):
+    def _get_rows(self, token, page):
         rows = []
         if token["location"] is None:
             for key, value in self.extension.getAcronyms(
@@ -225,9 +236,13 @@ class RenderAcronymListToken(components.RenderComponent):
             msg = "The 'complete' setting must be 'False' (default) when using 'location'."
             raise exceptions.MooseDocsException(msg)
 
+        return sorted(rows)  # alphabetize the acronym list
+
+    def createHTML(self, parent, token, page):
+        rows = self._get_rows(token, page)
+
         if rows:
             heading = ["Acronym", "Description"] if token["heading"] else None
-            rows.sort()  # alphabetize the acronym list
             tbl = table.builder(rows, heading)
             self.renderer.render(parent, tbl, page)
 
@@ -264,3 +279,22 @@ class RenderAcronymListToken(components.RenderComponent):
         else:
             msg = "Warning: The 'complete' setting is invalid when using 'location'."
             latex.String(parent, content=msg)
+
+    def createMarkdown(self, parent, token, page):
+        rows = self._get_rows(token, page)
+
+        table = markdown.Table(parent)
+
+        body = markdown.MarkdownNode(table, pf_cls="TableBody")
+        for row in rows:
+            brow = markdown.MarkdownNode(body, pf_cls="TableRow")
+            for col in row:
+                markdown.Text(markdown.TableCell(brow), content=col)
+
+        if token["heading"]:
+            head = markdown.MarkdownNode(table, pf_cls="TableHead")
+            hrow = markdown.MarkdownNode(head, "TableRow")
+            for col in ["Acronym", "Description"]:
+                markdown.Text(markdown.TableCell(hrow), content=col)
+
+        return table
