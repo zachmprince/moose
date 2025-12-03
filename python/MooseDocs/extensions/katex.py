@@ -13,7 +13,7 @@ import logging
 import moosetree
 from .. import common
 from ..base import components, renderers
-from ..tree import tokens, html, latex
+from ..tree import tokens, html, latex, markdown
 from . import command, core, heading
 
 LOG = logging.getLogger(__name__)
@@ -78,22 +78,25 @@ class KatexExtension(command.CommandExtension):
         labels = dict()
         count = 0
         func = lambda n: (n.name == "Equation") and (n["label"] is not None)
+        renderer = self.translator.renderer
         for node in moosetree.iterate(ast, func):
             count += 1
             node["number"] = count
             labels[node["label"]] = (count, node["bookmark"])
 
             # TODO: When !eqref is used for references, this should be removed
+            link = node["label"]
+            if isinstance(renderer, renderers.HTMLRenderer):
+                link = node["bookmark"]
             core.Shortcut(
                 ast,
                 key=node["label"],
                 string="{} ({})".format(self.get("prefix"), count),
-                link="#{}".format(node["bookmark"]),
+                link="#{}".format(link),
             )
 
         page["labels"] = labels
 
-        renderer = self.translator.renderer
         if common.has_tokens(ast, "Equation") and isinstance(
             renderer, renderers.HTMLRenderer
         ):
@@ -311,6 +314,23 @@ class RenderEquation(components.RenderComponent):
 
         return parent
 
+    def createMarkdown(self, parent, token, page):
+        eq = token["tex"]
+        if token["inline"]:
+            return markdown.Text(parent, content=f"${eq}$", raw=True)
+
+        def text(content):
+            markdown.Text(parent, content=content, raw=True)
+            markdown.MarkdownNode(parent, "LineBreak")
+
+        text("$$")
+        if token["label"]:
+            text(f"\\label{{{token["label"]}}}")
+        text(eq)
+        text("$$")
+        text("")
+        return parent
+
 
 class RenderEquationLink(core.RenderShortcutLink):
 
@@ -363,3 +383,38 @@ class RenderEquationReference(core.RenderShortcutLink):
         latex.String(parent, content=self.extension["prefix"] + "~", escape=False)
         latex.Command(parent, "eqref", string=key, escape=False)
         return parent
+
+    def createMarkdown(self, parent, token, page):
+        eq_page = (
+            page
+            if not token["filename"]
+            else self.translator.findPage(token["filename"])
+        )
+
+        num, _ = eq_page["labels"].get(token["label"], (None, None))
+        id = token["label"]
+        if eq_page is not page:
+            url = f"{eq_page.relativeDestination(page)}#{id}"
+        else:
+            url = f"#{id}"
+        link = markdown.Link(parent, url=url)
+
+        if eq_page is not page:
+            head = heading.find_heading(eq_page)
+            if head is not None:
+                tok = tokens.Token(None)
+                head.copyToToken(tok)
+                self.renderer.render(link, tok, page)
+                markdown.Text(link, content=", ")
+            else:
+                markdown.Text(link, content=token["filename"] + ", ")
+
+        if num is None:
+            msg = "Could not find equation with key {} on page {}".format(
+                token["label"], eq_page.local
+            )
+            raise common.exceptions.MooseDocsException(msg)
+        else:
+            markdown.Text(link, content=f"{self.extension['prefix']} ({num})")
+
+        return link

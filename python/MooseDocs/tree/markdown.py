@@ -108,7 +108,11 @@ class MarkdownNode(NodeBase):
         return self._pf_cls(*children, **self["pf_kwargs"])
 
     def write(self) -> str:
-        elem = self.to_panflute()
+        try:
+            elem = self.to_panflute()
+        except Exception as e:
+            raise ValueError(f"Error converting {type(self)} to panflute") from e
+
         if isinstance(elem, pf.Doc):
             doc = elem
         elif isinstance(elem, pf.Block):
@@ -130,6 +134,7 @@ class MarkdownDocument(MarkdownNode):
 
 
 class Text(MarkdownNode):
+    DEFAULT_PF_CLASS = pf.Str
     DEFAULT_PF_KWARGS = {"text": "content"}
 
     def __init__(
@@ -139,9 +144,10 @@ class Text(MarkdownNode):
         raw: bool = False,
         **kwargs,
     ):
-        super().__init__(
-            parent, pf_cls=pf.RawInline if raw else pf.Str, content=content, **kwargs
-        )
+        super().__init__(parent, content=content, **kwargs)
+        if raw:
+            self._pf_cls = pf.RawInline
+            self["pf_kwargs"]["format"] = "markdown"
 
 
 # Float classes necessary since parent-child relationship is reversed in panflute
@@ -260,11 +266,7 @@ class Cite(Text):
 class Bibliography(MarkdownNode):
     DEFAULT_PF_CLASS = pf.Para
 
-    def __init__(
-        self,
-        parent: Optional[MarkdownNode] = None,
-        **kwargs,
-    ):
+    def __init__(self, parent: Optional[MarkdownNode] = None, **kwargs):
         self._citations: dict[str, Text] = {}
         super().__init__(parent, **kwargs)
 
