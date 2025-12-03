@@ -10,7 +10,7 @@ import os
 import datetime
 from ..base import components
 from ..common import exceptions
-from ..tree import tokens, html, latex
+from ..tree import tokens, html, latex, markdown
 from . import command
 
 
@@ -77,3 +77,8 @@ class RenderDateTime(components.RenderComponent):
     def createLatex(self, parent, token, page):
         latex.String(parent, content=token["datetime"].strftime(token["format"]))
         return parent
+
+    def createMarkdown(self, parent, token, page):
+        p = parent if token["inline"] else markdown.Paragraph(parent)
+        markdown.Text(p, content=token["datetime"].strftime(token["format"]))
+        return p
