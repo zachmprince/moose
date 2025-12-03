@@ -247,3 +247,41 @@ class Alert(MarkdownNode):
     DEFAULT_PF_CLASS = pf.BlockQuote
     ENSURE_CHILDREN_ARE_BLOCK = True
 
+
+class Cite(Text):
+
+    def __init__(self, parent: Optional[MarkdownNode] = None, key: str = "", **kwargs):
+        if not key:
+            raise ValueError("Citation requires a key.")
+        content = f"[^{key}]"
+        super().__init__(parent, content, True, **kwargs)
+
+
+class Bibliography(MarkdownNode):
+    DEFAULT_PF_CLASS = pf.Para
+
+    def __init__(
+        self,
+        parent: Optional[MarkdownNode] = None,
+        **kwargs,
+    ):
+        self._citations: dict[str, Text] = {}
+        super().__init__(parent, **kwargs)
+
+    def add_citation(self, key: str, raw_markdown: str) -> Text:
+        if key not in self._citations:
+            content = f"[^{key}]: "
+            indent = ""
+            for line in raw_markdown.splitlines(keepends=True):
+                content += indent + line
+                indent = "    "
+
+        self._citations[key] = Text(self, content=content, raw=True)
+        return self._citations[key]
+
+    def to_panflute(self):
+        return [
+            self._pf_cls(child, **self["pf_kwargs"])
+            for child in self._materialize_children()
+        ]
+

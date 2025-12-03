@@ -7,6 +7,8 @@
 # Licensed under LGPL 2.1, please see LICENSE for details
 # https://www.gnu.org/licenses/lgpl-2.1.html
 
+import os
+import re
 import unittest
 
 from MooseDocs.tree import markdown
@@ -167,6 +169,53 @@ class TestMarkdownTree(unittest.TestCase):
         content = alert.write()
         expected = r"^> \[\!NOTE\]\s*\n> \*\*Alert title\*\*\n>\n> Alert content$"
         self.assertRegex(content, expected)
+
+    def test_cite(self):
+        p = markdown.Paragraph()
+        markdown.Text(p, content="This is one citation: ")
+        markdown.Cite(p, key="foo")
+        markdown.MarkdownNode(p, pf_cls="LineBreak")
+        markdown.Text(p, content="This is another citation: ")
+        markdown.Cite(p, key="bar")
+
+        content = p.write().splitlines()
+        self.assertEqual(len(content), 2)
+        self.assertEqual(content[0].strip(), "This is one citation: [^foo]")
+        self.assertEqual(content[1].strip(), "This is another citation: [^bar]")
+
+    def test_bibliography(self):
+        from pybtex.database import parse_file
+        from pybtex.plugin import find_plugin
+
+        this_dir = os.path.dirname(__file__)
+        moose_dir = os.path.abspath(os.path.join(this_dir, *([".."] * 4)))
+        bib_file = os.path.join(
+            moose_dir, "framework", "doc", "content", "bib", "moose.bib"
+        )
+
+        db = parse_file(bib_file)
+        keys = ["testkey", "libMeshPaper"]
+        backend = find_plugin("pybtex.backends", "markdown")(encoding="utf-8")
+        style = find_plugin("pybtex.style.formatting", "plain")
+        formatted_bib = style().format_bibliography(db, keys)
+        entries = {entry.key: entry.text.render(backend) for entry in formatted_bib}
+
+        backslash_re = re.compile(r"\\(?=[\.\-\(\)\\\+\*_\{\}\[\]#!`])")
+        doc = markdown.MarkdownDocument()
+        bib = markdown.Bibliography(doc)
+        for key, text in entries.items():
+            bib.add_citation(key, backslash_re.sub("", text))
+
+        content = doc.write()
+        expected = r"""[^libMeshPaper]: B. S. Kirk, J. W. Peterson, R. H. Stogner, and G. F. Carey.
+    \texttt libMesh: A C++ Library for Parallel Adaptive Mesh Refinement/Coarsening Simulations.
+    *Engineering with Computers*, 22(3–4):237–254, 2006.
+    URL: [http://dx.doi.org/10.1007/s00366-006-0049-3](http://dx.doi.org/10.1007/s00366-006-0049-3).
+
+[^testkey]: Jane Smith and John Doe.
+    A test citation without special characters for easy testing.
+    *A Prestigous Journal*, 1980."""
+        self.assertEqual(content, expected)
 
 
 if __name__ == "__main__":

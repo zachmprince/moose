@@ -9,6 +9,7 @@
 import sys
 import uuid
 import logging
+import re
 
 from pybtex.plugin import find_plugin, PluginNotFound
 from pybtex.database import BibliographyData, parse_file
@@ -20,7 +21,7 @@ import moosetree
 
 from ..common import exceptions
 from ..base import components, LatexRenderer, MarkdownReader
-from ..tree import tokens, html, latex
+from ..tree import tokens, html, latex, markdown
 from . import core, command
 
 LOG = logging.getLogger("MooseDocs.extensions.bibtex")
@@ -281,6 +282,11 @@ class RenderBibtexCite(components.RenderComponent):
         )
         return parent
 
+    def createMarkdown(self, parent, token, page):
+        for key in token["keys"]:
+            markdown.Cite(parent, key=key)
+        return parent
+
 
 class RenderBibtexBibliography(components.RenderComponent):
 
@@ -345,6 +351,33 @@ class RenderBibtexBibliography(components.RenderComponent):
 
     def createLatex(self, parent, token, page):
         pass
+
+    def createMarkdown(self, parent, token, page):
+        try:
+            style = find_plugin("pybtex.style.formatting", token["bib_style"])
+        except PluginNotFound:
+            msg = 'Unknown bibliography style "{}".'
+            raise exceptions.MooseDocsException(msg, token["bib_style"])
+
+        citations = self.getCitations(parent, token, page)
+        formatted_bibliography = style().format_bibliography(
+            self.extension.database(), citations
+        )
+
+        if formatted_bibliography.entries:
+            bib = markdown.Bibliography(parent)
+            backend = find_plugin("pybtex.backends", "markdown")(encoding="utf-8")
+            backslash_re = re.compile(r"\\(?=[\.\-\(\)\\\+\*_\{\}\[\]#!`])")
+            for entry in formatted_bibliography:
+                text = entry.text.render(backend)
+                bib.add_citation(entry.key, backslash_re.sub("", text))
+
+            return bib
+
+        else:
+            p = markdown.Paragraph(parent)
+            markdown.Text(p, content="No citations exist within this document.")
+            return p
 
 
 class RenderBibtexList(RenderBibtexBibliography):
