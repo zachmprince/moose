@@ -255,6 +255,7 @@ class Icon(Text):
         "home": b"\xf0\x9f\x8f\xa0",  # House
         "error": b"\xe2\x9d\x97",  # Red exclamation mark
         "error_outline": b"\xe2\x9d\x97",  # Red exclamation mark
+        "warning": b"\xe2\x9a\xa0\xef\xb8\x8f",  # Warning
         "arrow_back": b"\xe2\xac\x85",  # Left arrow
         "arrow_forward": b"\xe2\x9e\xa1",  # Right arrow
         "comment": b"\xf0\x9f\x92\xac",  # Speech balloon
