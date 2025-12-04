@@ -8,7 +8,7 @@
 # https://www.gnu.org/licenses/lgpl-2.1.html
 
 from ..base import components, LatexRenderer
-from ..tree import html, tokens, latex
+from ..tree import html, tokens, latex, markdown
 from . import command, core
 
 
@@ -84,3 +84,6 @@ class RenderIcon(components.RenderComponent):
     def createLatex(self, parent, token, page):
         icon = token["faicon"] or token["icon"]
         latex.Command(parent, "faicon", string=icon, escape=False)
+
+    def createMarkdown(self, parent, token, page):
+        return markdown.Icon(parent, icon=token["icon"])
