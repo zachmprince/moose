@@ -120,6 +120,9 @@ class RenderRowToken(components.RenderComponent):
     def createLatex(self, parent, token, page):
         return parent
 
+    def createMarkdown(self, parent, token, page):
+        return parent
+
 
 class RenderColumnToken(components.RenderComponent):
     def createHTML(self, parent, token, page):
@@ -147,3 +150,6 @@ class RenderColumnToken(components.RenderComponent):
         if token is not token.parent.children[-1]:
             latex.Command(parent, "hfill")
         return env
+
+    def createMarkdown(self, parent, token, page):
+        return parent
