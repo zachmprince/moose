@@ -156,20 +156,6 @@ class TestMarkdownTree(unittest.TestCase):
         self.assertEqual(rows[3], "")
         self.assertEqual(rows[4], "This is a caption. {#tab:table_label}")
 
-    def test_alert(self):
-        alert = markdown.Alert()
-        markdown.Text(alert, content="[!NOTE]", raw=True)
-        markdown.MarkdownNode(alert, "LineBreak")
-        markdown.Text(
-            markdown.MarkdownNode(alert, "Strong"),
-            content="Alert title",
-        )
-        markdown.Text(markdown.Paragraph(alert), content="Alert content")
-
-        content = alert.write()
-        expected = r"^> \[\!NOTE\]\s*\n> \*\*Alert title\*\*\n>\n> Alert content$"
-        self.assertRegex(content, expected)
-
     def test_cite(self):
         p = markdown.Paragraph()
         markdown.Text(p, content="This is one citation: ")
@@ -216,6 +202,57 @@ class TestMarkdownTree(unittest.TestCase):
     A test citation without special characters for easy testing.
     *A Prestigous Journal*, 1980."""
         self.assertEqual(content, expected)
+
+
+class TestMarkdownAlert(unittest.TestCase):
+    def test_icon(self):
+        for icon_name, emoji in markdown.Icon.ICON_EMOJI_DICT.items():
+            icon = markdown.Icon(icon=icon_name)
+            self.assertEqual(icon.write(), emoji.decode("utf-8"))
+
+    def test_alert_no_title(self):
+        alert = markdown.Alert()
+        markdown.Text(alert, content="[!NOTE]", raw=True)
+        markdown.MarkdownNode(alert, "LineBreak")
+        markdown.Text(markdown.Paragraph(alert), content="Alert content")
+
+        content = alert.write()
+        expected = r"^> \[\!NOTE\]\s*\n>\s*\n> Alert content$"
+        self.assertRegex(content, expected)
+
+    def test_alert_title_no_icon(self):
+        alert = markdown.Alert()
+        markdown.Text(alert, content="[!NOTE]", raw=True)
+        markdown.MarkdownNode(alert, "LineBreak")
+        markdown.Text(
+            markdown.MarkdownNode(alert, "Strong"),
+            content="Alert title",
+        )
+        markdown.Text(markdown.Paragraph(alert), content="Alert content")
+
+        content = alert.write()
+        expected = r"^> \[\!NOTE\]\s*\n> \*\*Alert title\*\*\n>\n> Alert content$"
+        self.assertRegex(content, expected)
+
+    def test_alert(self):
+        alert = markdown.Alert()
+        markdown.Text(alert, content="[!NOTE]", raw=True)
+        markdown.MarkdownNode(alert, "LineBreak")
+
+        markdown.Icon(alert, icon="comment")
+        icon = markdown.Icon.ICON_EMOJI_DICT["comment"].decode("utf-8")
+        markdown.MarkdownNode(alert, "Space")
+
+        markdown.Text(
+            markdown.MarkdownNode(alert, "Strong"),
+            content="Alert title",
+        )
+
+        markdown.Text(markdown.Paragraph(alert), content="Alert content")
+
+        content = alert.write()
+        expected = f"^> \\[\\!NOTE\\]\\s*\\n> {icon} \\*\\*Alert title\\*\\*\\n>\\n> Alert content$"
+        self.assertRegex(content, expected)
 
 
 if __name__ == "__main__":

@@ -241,4 +241,8 @@ class RenderAlertTitle(components.RenderComponent):
         return parent
 
     def createMarkdown(self, parent, token, page):
+        icon = token["icon_name"]
+        if icon in markdown.Icon.ICON_EMOJI_DICT:
+            markdown.Icon(parent, icon=icon)
+            markdown.MarkdownNode(parent, "Space")
         return markdown.MarkdownNode(parent, "Strong")

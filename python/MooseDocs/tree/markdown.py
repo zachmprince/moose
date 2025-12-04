@@ -249,6 +249,36 @@ class Caption(MarkdownNode):
     ENSURE_CHILDREN_ARE_BLOCK = True
 
 
+class Icon(Text):
+    ICON_EMOJI_DICT = {
+        "help": b"\xe2\x9d\x93",  # Red question mark
+        "home": b"\xf0\x9f\x8f\xa0",  # House
+        "error": b"\xe2\x9d\x97",  # Red exclamation mark
+        "error_outline": b"\xe2\x9d\x97",  # Red exclamation mark
+        "arrow_back": b"\xe2\xac\x85",  # Left arrow
+        "arrow_forward": b"\xe2\x9e\xa1",  # Right arrow
+        "comment": b"\xf0\x9f\x92\xac",  # Speech balloon
+        "build": b"\xf0\x9f\x94\xa7",  # Wrench
+        "school": b"\xf0\x9f\x8e\x93",  # Graduation Cap
+        "report": b"\xf0\x9f\x9b\x91",  # Stop sign
+        "device_hub": b"\xf0\x9f\x8c\x90",  # Globe with Meridians
+        "storage": b"\xf0\x9f\x93\x82",  # Open file folder
+        "computer": b"\xf0\x9f\x92\xbb",  # Laptop computer
+        "flash_on": b"\xe2\x9a\xa1",  # High voltage
+        "group": b"\xf0\x9f\x91\xa5",  # Busts in silhouette
+        "toys": b"\xf0\x9f\xaa\x80",  # Yo-yo
+        "settings": b"\xe2\x9a\x99",  # Gear
+        "assessment": b"\xf0\x9f\x93\x8a",  # Bar chart
+    }
+
+    def __init__(self, parent: Optional[MarkdownNode] = None, icon: str = "", **kwargs):
+        icon = icon.lower().replace(" ", "_")
+        content = self.ICON_EMOJI_DICT.get(
+            icon, b"\xe2\x98\x90"
+        )  # Default is empty box
+        super().__init__(parent, content=content.decode("utf-8"), **kwargs)
+
+
 class Alert(MarkdownNode):
     DEFAULT_PF_CLASS = pf.BlockQuote
     ENSURE_CHILDREN_ARE_BLOCK = True
@@ -286,4 +316,3 @@ class Bibliography(MarkdownNode):
             self._pf_cls(child, **self["pf_kwargs"])
             for child in self._materialize_children()
         ]
-
