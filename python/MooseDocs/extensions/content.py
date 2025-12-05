@@ -17,7 +17,7 @@ import mooseutils
 from .. import common
 from ..common import exceptions
 from ..base import components, renderers, LatexRenderer
-from ..tree import pages, tokens, html, latex
+from ..tree import pages, tokens, html, latex, markdown
 from . import core, command, heading
 
 LOG = logging.getLogger(__name__)
@@ -347,6 +347,23 @@ class RenderContentToken(components.RenderComponent):
                 latex.Command(parent, "ContentItem", start="\n", args=args, string=text)
             latex.Command(parent, "par", start="\n")
 
+    def createMarkdown(self, parent, token, page):
+        headings = self.extension.binContent(
+            page, token["location"], ContentExtension.FOLDER
+        )
+        for head in sorted(headings.keys()):
+            items = headings[head]
+            if head:
+                h = markdown.Heading(parent, level=int(token["level"]))
+                markdown.Text(h, content=str(head))
+
+            ul = markdown.MarkdownNode(parent, pf_cls="BulletList")
+            for text, path, _ in sorted(items, key=lambda x: x[2]):
+                li = markdown.MarkdownNode(ul, pf_cls="ListItem")
+                p = markdown.MarkdownNode(li, "Plain")
+                link = markdown.Link(p, url=path)
+                markdown.Text(link, content=str(text.replace(".md", "")))
+
 
 class RenderAtoZ(components.RenderComponent):
 
@@ -419,19 +436,50 @@ class RenderAtoZ(components.RenderComponent):
                 latex.Command(parent, "ContentItem", start="\n", args=args, string=text)
             latex.Command(parent, "par", start="\n")
 
+    def createMarkdown(self, parent, token, page):
+        # Initialized alphabetized storage
+        headings = self.extension.binContent(
+            page, token["location"], ContentExtension.LETTER
+        )
+        for letter in "0123456789abcdefghijklmnopqrstuvwxyz":
+            if letter not in headings:
+                headings[letter] = set()
+
+        for letter in sorted(headings.keys()):
+            items = headings[letter]
+            if not items:
+                continue
+
+            h = markdown.Heading(parent, level=int(token["level"]))
+            markdown.Text(h, content=letter)
+
+            ul = markdown.MarkdownNode(parent, pf_cls="BulletList")
+            for text, path, _ in sorted(items, key=lambda x: x[2]):
+                li = markdown.MarkdownNode(ul, pf_cls="ListItem")
+                p = markdown.MarkdownNode(li, "Plain")
+                link = markdown.Link(p, url=path)
+                markdown.Text(link, content=str(text))
+
 
 class RenderTableOfContents(components.RenderComponent):
 
-    def createHTML(self, parent, token, page):
+    @staticmethod
+    def _getHeadingTokens(token):
         hide = token["hide"]
         levels = token["levels"]
-        func = (
-            lambda n: (n.name == "Heading")
-            and (n["level"] in levels)
-            and (n is not token)
-            and (n["id"] not in hide)
-        )
-        toks = moosetree.findall(token.root, func)
+
+        def is_heading(n):
+            return (
+                (n.name == "Heading")
+                and (n["level"] in levels)
+                and (n is not token)
+                and (n["id"] not in hide)
+            )
+
+        return moosetree.findall(token.root, is_heading)
+
+    def createHTML(self, parent, token, page):
+        toks = self._getHeadingTokens(token)
 
         div = html.Tag(parent, "div", class_="moose-table-of-contents")
         div.addStyle("column-count:{}".format(token["columns"]))
@@ -446,6 +494,16 @@ class RenderTableOfContents(components.RenderComponent):
     def createLatex(self, parent, token, page):
         return None
 
+    def createMarkdown(self, parent, token, page):
+        ol = markdown.MarkdownNode(parent, "OrderedList")
+        for tok in self._getHeadingTokens(token):
+            li = markdown.MarkdownNode(ol, pf_cls="ListItem")
+            p = markdown.MarkdownNode(li, "Plain")
+            bookmark = tok["id"] if tok["id"] else tok.text("-").lower()
+            link = core.Link(None, url="#{}".format(bookmark))
+            tok.copyToToken(link)
+            self.renderer.render(p, link, page)
+
 
 class RenderContentOutline(components.RenderComponent):
     def createHTML(self, parent, token, page):
@@ -454,33 +512,40 @@ class RenderContentOutline(components.RenderComponent):
     def createMaterialize(self, parent, token, page):
         self.createHTMLHelper(parent, token, page)
 
-    def createHTMLHelper(self, parent, token, page):
+    def _get_outline_nodes(self, token, page):
+
         if token["location"] is not None and not token["pages"]:
-            if token["recursive"]:
-                func = lambda p: p.local.startswith(token["location"]) and isinstance(
-                    p, pages.Source
-                )
-            else:
-                location = token["location"].rstrip("/")
-                func = lambda p: os.path.dirname(p.local) == location and isinstance(
-                    p, pages.Source
-                )
-            nodes = self.translator.findPages(func)
+
+            def page_filter(node):
+                if token["recursive"]:
+                    return node.local.startswith(token["location"]) and isinstance(
+                        node, pages.Source
+                    )
+                else:
+                    location = token["location"].rstrip("/")
+                    return os.path.dirname(node.local) == location and isinstance(
+                        node, pages.Source
+                    )
+
+            nodes = self.translator.findPages(page_filter)
         elif token["pages"] and token["location"] is None:
             nodes = [self.translator.findPage(p) for p in token["pages"]]
         else:
             msg = "The 'location' and 'pages' settings must be used exclusively."
             raise exceptions.MooseDocsException(msg)
 
-        # Define convenience variables
         max_level = token["max_level"]
-        hide = token["hide"]
-        no_prefix = token["no_prefix"]
-        no_count = token["no_count"]
         if max_level > 6 or max_level < 1:
             raise exceptions.MooseDocsException(
                 "The 'max_level' must be set in range of 1 to 6."
             )
+
+        return nodes, max_level, token["hide"], token["no_prefix"], token["no_count"]
+
+    def createHTMLHelper(self, parent, token, page):
+        nodes, max_level, hide, no_prefix, no_count = self._get_outline_nodes(
+            token, page
+        )
 
         # Create the outline from the headings of each node.
         # This initializes the html tags to contain this list, where the previous heading level
@@ -528,6 +593,37 @@ class RenderContentOutline(components.RenderComponent):
         msg = "Warning: The Content Extension's 'outline' command is not supported for LaTex documents."
         latex.String(parent, content=msg)
 
+    def createMarkdown(self, parent, token, page):
+        nodes, max_level, hide, _, _ = self._get_outline_nodes(token, page)
+        li = parent
+        previous = 0
+        for node in nodes:
+            pageref = str(node.relativeDestination(page))
+            for key, head in node["headings"].items():
+                current = head["level"]
+                if current > max_level or key in hide:
+                    continue
+
+                diff = current - previous
+                if diff == 0:
+                    li = markdown.MarkdownNode(li.parent, pf_cls="ListItem")
+                elif diff > 0:
+                    for _ in range(diff):
+                        ol = markdown.MarkdownNode(li, pf_cls="OrderedList")
+                        li = markdown.MarkdownNode(ol, pf_cls="ListItem")
+                else:
+                    ol = li.parent
+                    for _ in range(-diff):
+                        ol = ol.parent.parent
+                    li = markdown.MarkdownNode(ol, pf_cls="ListItem")
+
+                plain = markdown.MarkdownNode(li, "Plain")
+                url = "{}#{}".format(pageref, key)
+                link = core.Link(None, url=url)
+                head.copyToToken(link)
+                self.renderer.render(plain, link, page)
+                previous = current
+
 
 class RenderPagination(components.RenderComponent):
     def createHTML(self, parent, token, page):
@@ -574,3 +670,28 @@ class RenderPagination(components.RenderComponent):
     def createLatex(self, parent, token, page):
         msg = "Warning: The Content Extension's 'pagination' command is not supported for LaTeX documents."
         latex.String(parent, content=msg)
+
+    def createMarkdown(self, parent, token, page):
+        for direction in ["previous", "next"]:
+            if token[direction] is None:
+                continue
+            # Get text
+            node = self.translator.findPage(token[direction])
+            if token["use_title"]:
+                string = heading.find_heading(node).text()
+                if len(string) > 18:
+                    string = string[:18] + ". . ."
+            else:
+                string = direction.capitalize()
+
+            # Create link
+            p = markdown.Paragraph(parent)
+            link = markdown.Link(p, url=str(node.relativeDestination(page)))
+            if direction == "previous":
+                markdown.Icon(link, "arrow_back")
+                markdown.MarkdownNode(link, "Space")
+                markdown.Text(link, content=string)
+            else:
+                markdown.Text(link, content=string)
+                markdown.MarkdownNode(link, "Space")
+                markdown.Icon(link, "arrow_forward")
