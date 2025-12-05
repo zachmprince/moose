@@ -494,7 +494,7 @@ class RenderHeading(components.RenderComponent):
         return sec
 
     def createMarkdown(self, parent, token, page):
-        return markdown.Heading(parent, level=token["level"])
+        return markdown.Heading(parent, level=token["level"], id=token.get("id") or "")
 
 
 class RenderCode(components.RenderComponent):

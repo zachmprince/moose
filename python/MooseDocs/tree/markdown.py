@@ -180,7 +180,24 @@ class Paragraph(MarkdownNode):
 
 class Heading(MarkdownNode):
     DEFAULT_PF_CLASS = pf.Header
-    DEFAULT_PF_KWARGS = {"level": "level"}
+    DEFAULT_PF_KWARGS = {"level": "level", "identifier": "id"}
+
+    def __init__(
+        self,
+        parent: Optional[MarkdownNode] = None,
+        level: int = 1,
+        id: str = "",
+        **kwargs,
+    ):
+        super().__init__(parent, level=level, id=str(id), **kwargs)
+
+    def _materialize_children(self):
+        children = super()._materialize_children()
+        id = self["pf_kwargs"]["identifier"]
+        if id:
+            children.append(pf.Space())
+            children.append(pf.RawInline(text=f"{{#{id}}}"))
+        return children
 
 
 class Code(MarkdownNode):

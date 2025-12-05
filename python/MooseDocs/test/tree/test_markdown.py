@@ -24,6 +24,10 @@ class TestMarkdownTree(unittest.TestCase):
         markdown.Text(head, content="Very Cool Heading")
         self.assertEqual(head.write(), "##### Very Cool Heading")
 
+        head = markdown.Heading(level=1, id="label")
+        markdown.Text(head, content="Very Cool Heading With ID")
+        self.assertEqual(head.write(), "# Very Cool Heading With ID {#label}")
+
     def test_code(self):
         code = markdown.Code(content='print("Hello World!")')
         self.assertEqual(code.write(), '`print("Hello World!")`')
