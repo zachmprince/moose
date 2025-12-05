@@ -643,7 +643,15 @@ class RenderLink(components.RenderComponent):
         return cmd
 
     def createMarkdown(self, parent, token, page):
-        return markdown.Link(parent, url=token["url"])
+        url: str = token["url"][:]
+        # Remove page from url if it is the same as this one
+        if "#" in url:
+            url_page, url_bookmark = url.split("#", 1)
+            if url_page == page.name:
+                url = f"#{url_bookmark}"
+        elif url == page.name:
+            url = "#"
+        return markdown.Link(parent, url=url)
 
 
 class RenderParagraph(components.RenderComponent):

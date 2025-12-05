@@ -11,6 +11,7 @@ import re
 import logging
 
 import MooseDocs
+from MooseDocs.base import renderers
 from .. import common
 from ..base import components, Extension
 from ..tree import tokens, latex, html
@@ -143,7 +144,7 @@ class PageLinkComponent(core.LinkInline):
 
 class RenderLinkBase(components.RenderComponent):
 
-    def createHTMLHelper(self, parent, token, page, desired):
+    def createHelper(self, parent, token, page, desired):
         bookmark = token["bookmark"]
 
         # Handle 'optional' linking
@@ -237,10 +238,13 @@ class RenderLocalLink(RenderLinkBase):
     """
 
     def createHTML(self, parent, token, page):
-        return self.createHTMLHelper(parent, token, page, page)
+        return self.createHelper(parent, token, page, page)
 
     def createLatex(self, parent, token, page):
         return self.createLatexHelper(parent, token, page, page)
+
+    def createMarkdown(self, parent, token, page):
+        return self.createHelper(parent, token, page, page)
 
 
 class RenderAutoLink(RenderLinkBase):
@@ -248,7 +252,16 @@ class RenderAutoLink(RenderLinkBase):
     Create link to another page and extract the heading for the text, if no children provided.
     """
 
-    def createHTML(self, parent, token, page):
+    @property
+    def _method(self):
+        if isinstance(self.renderer, renderers.LatexRenderer):
+            return "createLatex"
+        elif isinstance(self.renderer, renderers.MarkdownRenderer):
+            return "createMarkdown"
+        else:
+            return "createHTML"
+
+    def createAutolinkHelper(self, parent, token, page):
         alternative = token["alternative"]
         optional = token["optional"]
         exact = token["exact"]
@@ -259,7 +272,8 @@ class RenderAutoLink(RenderLinkBase):
                 throw_on_zero=not optional and alternative is None,
             )
         except MooseDocs.common.exceptions.MooseDocsException:
-            html.String(parent, content=token["page"], class_="moose_error")
+            if self._method == "createHTML":
+                html.String(parent, content=token["page"], class_="moose_error")
             raise
 
         # If no page was found, create a new copy of the token and render the alernative hyperlink
@@ -275,10 +289,14 @@ class RenderAutoLink(RenderLinkBase):
             # be a local link or a URL, otherwise, we'll search for the 'filename#bookmark' href.
             if token["page"] is None:
                 if token["bookmark"] is not None:
-                    return RenderLocalLink.createHTML(self, parent, token, page)
+                    return getattr(RenderLocalLink, self._method)(
+                        self, parent, token, page
+                    )
                 elif len(token):
                     token["url"] = alternative
-                    return core.RenderLink.createHTML(self, parent, token, page)
+                    return getattr(core.RenderLink, self._method)(
+                        self, parent, token, page
+                    )
                 else:
                     msg = (
                         "URLs cannot be used as an alternative for automatic shortcut links. "
@@ -297,7 +315,10 @@ class RenderAutoLink(RenderLinkBase):
                 token["page"], exact=exact, throw_on_zero=not optional
             )
 
-        return self.createHTMLHelper(parent, token, page, desired)
+        return super().createHelper(parent, token, page, desired)
+
+    def createHTML(self, parent, token, page):
+        return self.createAutolinkHelper(parent, token, page)
 
     def createLatex(self, parent, token, page):
         throw = not token["optional"] and token["alternative"] is None
@@ -315,3 +336,6 @@ class RenderAutoLink(RenderLinkBase):
             return None
 
         return self.createLatexHelper(parent, token, page, desired)
+
+    def createMarkdown(self, parent, token, page):
+        return self.createAutolinkHelper(parent, token, page)
