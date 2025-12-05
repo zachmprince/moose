@@ -18,7 +18,7 @@ import MooseDocs
 from .. import common
 from ..common import exceptions, report_error
 from ..base import components
-from ..tree import tokens, html, latex
+from ..tree import tokens, html, latex, markdown
 from . import core, command
 
 LOG = logging.getLogger("MooseDocs.extensions.modal")
@@ -144,6 +144,9 @@ class RenderModalLinkToken(components.RenderComponent):
     def createLatex(self, parent, token, page):
         return parent
 
+    def createMarkdown(self, parent, token, page):
+        return parent
+
 
 class RenderSourceLinkToken(components.RenderComponent):
     @staticmethod
@@ -224,4 +227,9 @@ class RenderSourceLinkToken(components.RenderComponent):
     def createLatex(self, parent, token, page):
         if not token.children:
             latex.String(parent, content=self.linkText(token))
+        return parent
+
+    def createMarkdown(self, parent, token, page):
+        if not token.children:
+            markdown.Text(parent, content=self.linkText(token))
         return parent
