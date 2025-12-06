@@ -9,7 +9,8 @@
 import re
 
 from ..base import components, Extension
-from ..tree import tokens
+from ..tree import tokens, markdown
+from ..extensions import core
 
 
 def make_extension(**kwargs):
@@ -17,6 +18,9 @@ def make_extension(**kwargs):
     Create and return the CoreExtension object for converting from markdown to html/latex.
     """
     return SpecialExtension(**kwargs)
+
+
+HTMLCode = tokens.newToken("HTMLCode", tokens.String)
 
 
 class SpecialExtension(Extension):
@@ -30,12 +34,14 @@ class SpecialExtension(Extension):
         reader.addInline(HTMLNumberCode(), location="<PunctuationInline")
         reader.addInline(HTMLEntityCode(), location="<PunctuationInline")
 
+        renderer.add("HTMLCode", RenderHTMLCode())
+
 
 class HTMLNumberCode(components.ReaderComponent):
     RE = re.compile(r"(?P<code>&#[0-9]+;)")
 
     def createToken(self, parent, info, page, settings):
-        tokens.String(parent, content=info["code"], escape=False)
+        HTMLCode(parent, content=info["code"], escape=False)
         return parent
 
 
@@ -43,5 +49,12 @@ class HTMLEntityCode(components.ReaderComponent):
     RE = re.compile(r"(?P<code>&[A-Za-z0-9]+;)")
 
     def createToken(self, parent, info, page, settings):
-        tokens.String(parent, content=info["code"], escape=False)
+        HTMLCode(parent, content=info["code"], escape=False)
         return parent
+
+
+class RenderHTMLCode(core.RenderString):
+    def createMarkdown(self, parent, token, page):
+        import html
+
+        return markdown.Text(parent, content=html.unescape(token["content"]))

@@ -724,7 +724,9 @@ class RenderString(components.RenderComponent):
         return latex.String(parent, content=token["content"])
 
     def createMarkdown(self, parent, token, page):
-        return markdown.Text(parent, content=token["content"])
+        return markdown.Text(
+            parent, content=token["content"], raw=not token.get("escape", True)
+        )
 
 
 class RenderSpace(components.RenderComponent):
