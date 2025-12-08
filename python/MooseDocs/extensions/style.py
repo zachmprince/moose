@@ -110,3 +110,6 @@ class RenderStyleToken(components.RenderComponent):
             latex.Command(primary, "color", string=token["color"])
 
         return primary
+
+    def createMarkdown(self, parent, token, page):
+        return parent
