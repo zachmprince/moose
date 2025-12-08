@@ -202,7 +202,12 @@ class CodeBlock(MarkdownNode):
         language: str = "",
         **kwargs,
     ):
-        super().__init__(parent, content=content, language=[language], **kwargs)
+        super().__init__(
+            parent,
+            content=content or "",
+            language=[language] if language else [""],
+            **kwargs,
+        )
 
 
 class Link(MarkdownNode):
