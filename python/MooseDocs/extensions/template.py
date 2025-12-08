@@ -184,6 +184,9 @@ class RenderTemplateField(components.RenderComponent):
     def createLatex(self, parent, token, page):
         self._renderField(parent, token, page, False)
 
+    def createMarkdown(self, parent, token, page):
+        self._renderField(parent, token, page)
+
     def _renderField(self, parent, token, page, modal=None):
         """Helper to render tokens, the logic is the same across formats."""
 
