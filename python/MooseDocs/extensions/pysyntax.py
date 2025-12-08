@@ -175,7 +175,7 @@ class PySyntaxCommandBase(command.CommandComponent):
                 parent, level=h_level, class_="moose-pysyntax-member-heading"
             )
             fname = name + pyinfo.signature if pyinfo.signature is not None else name
-            core.Monospace(core.Strong(h), string=fname)
+            core.Monospace(core.Strong(h), content=fname)
             if pyinfo.documentation is None:
                 msg = "Missing documentation for '%s'.\n%s"
                 LOG.error(msg, name, doc.filename)
@@ -195,7 +195,7 @@ class PySyntaxCommandBase(command.CommandComponent):
         h = core.Heading(
             sec, level=h_level, string=name, class_="moose-pysyntax-class-heading"
         )
-        core.Monospace(sec, string=name + doc.signature)
+        core.Monospace(sec, content=name + doc.signature)
 
         if doc.documentation is None:
             msg = "Missing documentation for '%s'.\n%s"
@@ -260,6 +260,9 @@ class RenderPyClass(components.RenderComponent):
     def createHTML(self, parent, token, page):
         return html.Tag(parent, "div", class_="moose-pysyntax-class")
 
+    def createMarkdown(self, parent, token, page):
+        return parent
+
 
 class RenderPyFunction(components.RenderComponent):
     def createLatex(self, parent, token, page):
@@ -267,3 +270,6 @@ class RenderPyFunction(components.RenderComponent):
 
     def createHTML(self, parent, token, page):
         return html.Tag(parent, "div", class_="moose-pysyntax-function")
+
+    def createMarkdown(self, parent, token, page):
+        return parent
