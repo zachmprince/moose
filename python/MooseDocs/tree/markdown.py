@@ -218,11 +218,16 @@ class Table(MarkdownNode):
         "left": "AlignLeft",
         "right": "AlignRight",
         "center": "AlignCenter",
+        "l": "AlignLeft",
+        "r": "AlignRight",
+        "c": "AlignCenter",
     }
 
     def __init__(self, parent=None, alignment=None, **kwargs):
         if alignment is not None:
-            alignment = [(self.ALIGNMENT_MAP[a], "ColWidthDefault") for a in alignment]
+            alignment = [
+                (self.ALIGNMENT_MAP[a.lower()], "ColWidthDefault") for a in alignment
+            ]
 
         super().__init__(parent, alignment=alignment, **kwargs)
 

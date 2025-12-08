@@ -192,3 +192,6 @@ class RenderExample(components.RenderComponent):
         for child in [c for c in token.children[1:]] if len(token) > 1 else list():
             self.translator.renderer.render(example, child, page)
         return None
+
+    def createMarkdown(self, parent, token, page):
+        return parent
