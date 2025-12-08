@@ -117,10 +117,16 @@ class MarkdownNode(NodeBase):
             doc = elem
         elif isinstance(elem, pf.Block):
             doc = pf.Doc(elem)
+        elif isinstance(elem, (list, tuple)):
+            doc = pf.Doc(*elem)
         else:
             doc = pf.Doc(pf.Plain(elem))
         # convert_text understands pf.Doc instances, so this yields raw markdown
-        return pf.convert_text(doc, input_format="panflute", output_format="gfm")
+        return pf.convert_text(
+            doc,
+            input_format="panflute",
+            output_format="commonmark_x+subscript+superscript-raw_html",
+        )
 
 
 class MarkdownDocument(MarkdownNode):
@@ -147,30 +153,18 @@ class Text(MarkdownNode):
         super().__init__(parent, content=content, **kwargs)
         if raw:
             self._pf_cls = pf.RawInline
-            self["pf_kwargs"]["format"] = "markdown"
+            self["pf_kwargs"]["format"] = "commonmark"
 
 
 # Float classes necessary since parent-child relationship is reversed in panflute
-class TableFloat(MarkdownNode):
+class Float(MarkdownNode):
     # This is arbitrary since we won't be using it
-    DEFAULT_PF_CLASS = pf.Table
+    DEFAULT_PF_CLASS = pf.Figure
+
+    ENSURE_CHILDREN_ARE_BLOCK = True
 
     def to_panflute(self):
-        table: "Table" = None
-        caption: "Caption" = None
-        for child in self.children:
-            assert isinstance(child, (Table, Caption))
-            if isinstance(child, Table):
-                assert table is None
-                table = child
-            elif isinstance(child, Caption):
-                assert caption is None
-                caption = child
-
-        if caption is not None:
-            table["pf_kwargs"]["caption"] = caption.to_panflute()
-        table.id = self.id
-        return table.to_panflute()
+        return self._materialize_children()
 
 
 # Convenience factories mirroring common markdown constructs
@@ -190,14 +184,6 @@ class Heading(MarkdownNode):
         **kwargs,
     ):
         super().__init__(parent, level=level, id=str(id), **kwargs)
-
-    def _materialize_children(self):
-        children = super()._materialize_children()
-        id = self["pf_kwargs"]["identifier"]
-        if id:
-            children.append(pf.Space())
-            children.append(pf.RawInline(text=f"{{#{id}}}"))
-        return children
 
 
 class Code(MarkdownNode):
@@ -262,8 +248,7 @@ class TableCell(MarkdownNode):
 
 
 class Caption(MarkdownNode):
-    DEFAULT_PF_CLASS = pf.Caption
-    ENSURE_CHILDREN_ARE_BLOCK = True
+    DEFAULT_PF_CLASS = pf.Span
 
 
 class Icon(Text):

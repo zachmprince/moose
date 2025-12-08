@@ -12,7 +12,7 @@ import collections
 import re
 import logging
 import moosetree
-import MooseDocs
+from MooseDocs import common
 from ..common import exceptions, report_error
 from ..base import components, MarkdownReader, LatexRenderer, Extension
 from ..tree import tokens, html, latex, markdown
@@ -216,6 +216,9 @@ class RenderFloat(components.RenderComponent):
 
         return env
 
+    def createMarkdown(self, parent, token, page):
+        return markdown.Float(parent)
+
 
 class RenderFloatCaption(components.RenderComponent):
     def createHTML(self, parent, token, page):
@@ -242,8 +245,7 @@ class RenderFloatCaption(components.RenderComponent):
                 caption,
                 content=f"{prefix} {token['number']}: ",
             )
-        assert isinstance(parent, markdown.MarkdownNode)
-        parent.id = token["key"]
+        caption.id = token["key"]
 
         return caption
 
@@ -259,10 +261,11 @@ class RenderFloatReference(core.RenderShortcutLink):
             )
             if float_page is None:
                 a["class"] = "moose-error"
-                html.String(a, content="{}#{}".format(token["filename"], key))
+                html.String(
+                    a, content="{}#{}".format(token["filename"], token["label"])
+                )
                 msg = "Could not find  page {}".format(token["filename"])
                 raise exceptions.MooseDocsException(msg)
-                return None
 
             head = heading.find_heading(float_page)
             if head is not None:

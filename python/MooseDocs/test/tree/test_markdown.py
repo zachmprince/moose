@@ -111,54 +111,10 @@ class TestMarkdownTree(unittest.TestCase):
 
         check_format("Strong", "**")
         check_format("Emph", "*")
-        check_format("Underline", "<u>", "</u>")
+        check_format("Underline", "[", "]{.underline}")
         check_format("Strikeout", "~~")
-        check_format("Subscript", "<sub>", "</sub>")
-        check_format("Superscript", "<sup>", "</sup>")
-
-    def test_table(self):
-        flt = markdown.TableFloat()
-        table = markdown.Table(flt, alignment=["left", "center", "right"])
-        head = markdown.MarkdownNode(table, pf_cls="TableHead")
-        body = markdown.MarkdownNode(table, pf_cls="TableBody")
-        caption = markdown.Caption(flt)
-        flt.id = "tab:table_label"
-
-        markdown.Text(caption, content="This is a caption.")
-
-        def get_table_cell(parent, i, j):
-            content = f"Heading {j + 1}" if i == 0 else f"Item {i} {j + 1}"
-            return markdown.Text(parent, content=content)
-
-        row1 = markdown.MarkdownNode(head, pf_cls="TableRow")
-        get_table_cell(markdown.TableCell(row1), 0, 0)
-        get_table_cell(markdown.TableCell(row1), 0, 1)
-        get_table_cell(markdown.TableCell(row1), 0, 2)
-
-        row2 = markdown.MarkdownNode(body, pf_cls="TableRow")
-        get_table_cell(markdown.TableCell(row2), 1, 0)
-        get_table_cell(markdown.TableCell(row2), 1, 1)
-        get_table_cell(markdown.TableCell(row2), 1, 2)
-
-        table_str = flt.write()
-        rows = table_str.split("\n")
-        self.assertEqual(len(rows), 5)
-        cells = []
-        for i in range(3):
-            tmp = rows[i].split("|")
-            self.assertEqual(len(tmp), 5)
-            self.assertEqual(tmp[0], "")
-            self.assertEqual(tmp[-1], "")
-            cells.append([c.strip() for c in tmp[1:-1]])
-
-        self.assertListEqual(cells[0], ["Heading 1", "Heading 2", "Heading 3"])
-        self.assertListEqual(cells[2], ["Item 1 1", "Item 1 2", "Item 1 3"])
-        self.assertRegex(cells[1][0], r"^:-+$")
-        self.assertRegex(cells[1][1], r"^:-+:$")
-        self.assertRegex(cells[1][2], r"^-+:$")
-
-        self.assertEqual(rows[3], "")
-        self.assertEqual(rows[4], "This is a caption. {#tab:table_label}")
+        check_format("Subscript", "~")
+        check_format("Superscript", "^")
 
     def test_cite(self):
         p = markdown.Paragraph()
@@ -257,6 +213,92 @@ class TestMarkdownAlert(unittest.TestCase):
         content = alert.write()
         expected = f"^> \\[\\!NOTE\\]\\s*\\n> {icon} \\*\\*Alert title\\*\\*\\n>\\n> Alert content$"
         self.assertRegex(content, expected)
+
+
+class TestMarkdownFloat(unittest.TestCase):
+    def test_float(self):
+        flt = markdown.Float()
+        cap = markdown.Caption(flt)
+        cap.id = "label"
+        markdown.Text(cap, content="This is a caption.")
+
+        p = markdown.Paragraph(flt)
+        markdown.Text(p, content="Hello World!")
+
+        lines = flt.write().splitlines()
+        self.assertEqual(len(lines), 3)
+        self.assertEqual(lines[0], "[This is a caption.]{#label}")
+        self.assertEqual(lines[1], "")
+        self.assertEqual(lines[2], "Hello World!")
+
+    def test_float_no_label_no_caption(self):
+        flt = markdown.Float()
+        p = markdown.Paragraph(flt)
+        markdown.Text(p, content="Hello World!")
+
+        lines = flt.write().splitlines()
+        self.assertEqual(len(lines), 1)
+        self.assertEqual(lines[0], "Hello World!")
+
+    def test_float_no_label(self):
+        flt = markdown.Float()
+        cap = markdown.Caption(flt)
+        markdown.Text(cap, content="This is a caption.")
+
+        p = markdown.Paragraph(flt)
+        markdown.Text(p, content="Hello World!")
+
+        lines = flt.write().splitlines()
+        self.assertEqual(len(lines), 3)
+        self.assertEqual(lines[0], "This is a caption.")
+        self.assertEqual(lines[1], "")
+        self.assertEqual(lines[2], "Hello World!")
+
+    def test_table(self):
+        flt = markdown.Float()
+        caption = markdown.MarkdownNode(flt, "Span")
+        caption.id = "tab:table_label"
+
+        table = markdown.Table(flt, alignment=["left", "center", "right"])
+        head = markdown.MarkdownNode(table, pf_cls="TableHead")
+        body = markdown.MarkdownNode(table, pf_cls="TableBody")
+
+        markdown.Text(caption, content="This is a caption.")
+
+        def get_table_cell(parent, i, j):
+            content = f"Heading {j + 1}" if i == 0 else f"Item {i} {j + 1}"
+            return markdown.Text(parent, content=content)
+
+        row1 = markdown.MarkdownNode(head, pf_cls="TableRow")
+        get_table_cell(markdown.TableCell(row1), 0, 0)
+        get_table_cell(markdown.TableCell(row1), 0, 1)
+        get_table_cell(markdown.TableCell(row1), 0, 2)
+
+        row2 = markdown.MarkdownNode(body, pf_cls="TableRow")
+        get_table_cell(markdown.TableCell(row2), 1, 0)
+        get_table_cell(markdown.TableCell(row2), 1, 1)
+        get_table_cell(markdown.TableCell(row2), 1, 2)
+
+        table_str = flt.write()
+        rows = table_str.split("\n")
+        self.assertEqual(len(rows), 5)
+
+        self.assertEqual(rows[0], "[This is a caption.]{#tab:table_label}")
+        self.assertEqual(rows[1], "")
+
+        cells = []
+        for i in range(2, len(rows)):
+            tmp = rows[i].split("|")
+            self.assertEqual(len(tmp), 5)
+            self.assertEqual(tmp[0], "")
+            self.assertEqual(tmp[-1], "")
+            cells.append([c.strip() for c in tmp[1:-1]])
+
+        self.assertListEqual(cells[0], ["Heading 1", "Heading 2", "Heading 3"])
+        self.assertListEqual(cells[2], ["Item 1 1", "Item 1 2", "Item 1 3"])
+        self.assertRegex(cells[1][0], r"^:-+$")
+        self.assertRegex(cells[1][1], r"^:-+:$")
+        self.assertRegex(cells[1][2], r"^-+:$")
 
 
 if __name__ == "__main__":

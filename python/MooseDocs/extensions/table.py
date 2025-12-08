@@ -244,6 +244,3 @@ class RenderTableFloat(floats.RenderFloat):
         flt = floats.RenderFloat.createLatex(self, parent, token, page)
         latex.Command(flt, "center")
         return flt
-
-    def createMarkdown(self, parent, token, page):
-        return markdown.TableFloat(parent)
