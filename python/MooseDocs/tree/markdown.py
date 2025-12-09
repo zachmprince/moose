@@ -214,6 +214,17 @@ class Link(MarkdownNode):
     DEFAULT_PF_CLASS = pf.Link
     DEFAULT_PF_KWARGS = {"url": "url"}
 
+    @property
+    def url(self) -> str:
+        return self["pf_kwargs"].get("url", None)
+
+    @url.setter
+    def url(self, value: Optional[str]):
+        if value is not None:
+            self["pf_kwargs"]["url"] = value
+        elif "url" in self["pf_kwargs"]:
+            self["pf_kwargs"].pop("url")
+
 
 class Table(MarkdownNode):
     DEFAULT_PF_CLASS = pf.Table

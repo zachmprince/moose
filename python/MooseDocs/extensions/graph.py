@@ -22,7 +22,7 @@ except ImportError:
 import mooseutils
 from .. import common
 from ..base import components, renderers
-from ..tree import tokens, html, latex
+from ..tree import tokens, html, latex, markdown
 from . import command, floats
 
 
@@ -312,6 +312,34 @@ class RenderScatter(components.RenderComponent):
     # Shares loaded template content across all instances
     HTML_TEMPLATE = GraphTemplate("scatter.js")
 
+    def add_data_trace(self, fig, data):
+        """Add data to trace of figure. Used for image generation."""
+        fig.add_scatter(**data)
+
+    def createImage(self, token, page):
+        """Create image of plotly figure in PDF format."""
+        if self.extension["draft"]:
+            return "draft.pdf"
+
+        layout = token["layout"]
+        layout.setdefault(
+            "font", dict(family="Computer Modern", size=12, color="#000000")
+        )
+        layout.setdefault("xaxis", dict())
+        layout["xaxis"].setdefault("linewidth", 1)
+        layout.setdefault("yaxis", dict())
+        layout["yaxis"].setdefault("linewidth", 1)
+
+        layout = plotly.graph_objs.Layout(**layout)
+        fig = plotly.graph_objs.Figure(layout=layout)
+        for data in token["data"]:
+            self.add_data_trace(fig, data)
+
+        _, loc = tempfile.mkstemp(suffix=".pdf", dir=os.path.dirname(page.destination))
+        plotly.io.write_image(fig, loc)
+
+        return loc
+
     def createHTML(self, parent, token, page):
         plot_id = str(uuid.uuid4())
         content = self.HTML_TEMPLATE(
@@ -322,79 +350,22 @@ class RenderScatter(components.RenderComponent):
 
     def createLatex(self, parent, token, page):
 
-        args = []
-        if self.extension["draft"]:
-            args.append("draft")
-            loc = "draft.pdf"
-        else:
-            layout = token["layout"]
-            layout.setdefault(
-                "font", dict(family="Computer Modern", size=12, color="#000000")
-            )
-            layout.setdefault("xaxis", dict())
-            layout["xaxis"].setdefault("linewidth", 1)
-            layout.setdefault("yaxis", dict())
-            layout["yaxis"].setdefault("linewidth", 1)
-
-            layout = plotly.graph_objs.Layout(**layout)
-            fig = plotly.graph_objs.Figure(layout=layout)
-            for data in token["data"]:
-                fig.add_scatter(**data)
-
-            _, loc = tempfile.mkstemp(
-                suffix=".pdf", dir=os.path.dirname(page.destination)
-            )
-            plotly.io.write_image(fig, loc)
-
+        loc = self.createImage(token, page)
+        args = ["draft"] if self.extension["draft"] else []
         args = [latex.create_settings(*args, width="\\textwidth")]
         latex.Command(parent, "par", start="\n")
         latex.Command(
             parent, "includegraphics", args=args, string=loc, start="\n", escape=False
         )
 
+    def createMarkdown(self, parent, token, page):
+        loc = self.createImage(token, page)
+        return markdown.Image(parent, src=loc)
 
-class RenderHistogram(components.RenderComponent):
+
+class RenderHistogram(RenderScatter):
     """Render a plotly histogram plot."""
 
-    # Shares loaded template content across all instances
-    HTML_TEMPLATE = GraphTemplate("scatter.js")
-
-    def createHTML(self, parent, token, page):
-        plot_id = str(uuid.uuid4())
-        content = self.HTML_TEMPLATE(
-            id_=plot_id, data=repr(token["data"]), layout=repr(token["layout"])
-        )
-        html.Tag(parent, "div", id_=plot_id)
-        html.Tag(parent, "script", string=content)
-
-    def createLatex(self, parent, token, page):
-
-        args = []
-        if self.extension["draft"]:
-            args.append("draft")
-            loc = "draft.pdf"
-        else:
-            layout = token["layout"]
-            layout.setdefault(
-                "font", dict(family="Computer Modern", size=12, color="#000000")
-            )
-            layout.setdefault("xaxis", dict())
-            layout["xaxis"].setdefault("linewidth", 1)
-            layout.setdefault("yaxis", dict())
-            layout["yaxis"].setdefault("linewidth", 1)
-
-            layout = plotly.graph_objs.Layout(**layout)
-            fig = plotly.graph_objs.Figure(layout=layout)
-            for data in token["data"]:
-                fig.add_trace(plotly.graph_objs.Histogram(**data))
-
-            _, loc = tempfile.mkstemp(
-                suffix=".pdf", dir=os.path.dirname(page.destination)
-            )
-            plotly.io.write_image(fig, loc)
-
-        args = [latex.create_settings(*args, width="\\textwidth")]
-        latex.Command(parent, "par", start="\n")
-        latex.Command(
-            parent, "includegraphics", args=args, string=loc, start="\n", escape=False
-        )
+    def add_data_trace(self, fig, data):
+        """Add data to trace of figure. Used for image generation."""
+        fig.add_trace(plotly.graph_objs.Histogram(**data))

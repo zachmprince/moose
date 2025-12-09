@@ -309,3 +309,47 @@ class RenderFloatReference(core.RenderShortcutLink):
         latex.String(parent, content=prefix + "~", escape=False)
         latex.Command(parent, "ref", string=token["label"], escape=False)
         return parent
+
+    def createMarkdown(self, parent, token, page):
+        float_page = page
+        link = markdown.Link(parent)
+        if token["filename"]:
+            float_page = self.translator.findPage(
+                token["filename"], throw_on_zero=False
+            )
+            if float_page is None:
+                link.url = "{}#{}".format(token["filename"], token["label"])
+                msg = "Could not find  page {}".format(token["filename"])
+                markdown.Text(link, content=msg)
+                raise exceptions.MooseDocsException(msg)
+
+            head = heading.find_heading(float_page)
+            if head is not None:
+                tok = tokens.Token(None)
+                head.copyToToken(tok)
+                self.renderer.render(link, tok, page)
+                markdown.Text(link, content=", ")
+            else:
+                markdown.Text(link, content=token["filename"] + ", ")
+
+        key = token["label"]
+        float_node = float_page["floats"].get(key, None)
+        if float_node is None:
+            link.url = "{}#{}".format(float_page.local, token["label"])
+            msg = "Could not find float with key {} on page {}".format(
+                key, float_page.local
+            )
+            markdown.Text(link, content=msg)
+            raise exceptions.MooseDocsException(msg)
+        elif float_page is not page:
+            url = float_page.relativeDestination(page)
+            link.url = "{}#{}".format(url, key)
+        else:
+            link.url = "#{}".format(key)
+
+        prefix = float_node.get("prefix", None)
+        prefix = "" if prefix is None else prefix.title()
+        if prefix:
+            markdown.Text(link, content="{} {}".format(prefix, float_node["number"]))
+
+        return link
