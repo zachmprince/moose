@@ -329,3 +329,27 @@ class Bibliography(MarkdownNode):
             self._pf_cls(child, **self["pf_kwargs"])
             for child in self._materialize_children()
         ]
+
+
+class Image(MarkdownNode):
+    DEFAULT_PF_CLASS = pf.Image
+    DEFAULT_PF_KWARGS = {"url": "src"}
+
+    def __init__(
+        self,
+        parent: Optional[MarkdownNode] = None,
+        src: str = "",
+        **kwargs,
+    ):
+        super().__init__(parent, src=src, **kwargs)
+
+        # Get caption
+        if isinstance(parent, Float):
+            for child in parent.children:
+                if isinstance(child, Caption):
+                    # Set this as caption's parent
+                    child.parent = self
+                    # Retrieve ID and reset caption ID
+                    self.id = child.id
+                    child.id = None
+                    break

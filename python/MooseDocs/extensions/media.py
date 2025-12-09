@@ -12,7 +12,7 @@ import logging
 import mooseutils
 from ..common import exceptions, report_error
 from ..base import components, Extension, LatexRenderer
-from ..tree import tokens, html, latex, pages
+from ..tree import tokens, html, latex, pages, markdown
 from . import command, floats
 
 LOG = logging.getLogger(__name__)
@@ -375,6 +375,9 @@ class RenderImage(components.RenderComponent):
         self.extension.latexImage(parent, token, page, src)
         return parent
 
+    def createMarkdown(self, parent, token, page):
+        return markdown.Image(parent, src=token["src"])
+
 
 class RenderVideo(components.RenderComponent):
     def createHTML(self, parent, token, page):
@@ -489,3 +492,6 @@ class RenderVideo(components.RenderComponent):
             latex.String(img.parent, content=")")
 
         return parent
+
+    def createMarkdown(self, parent, token, page):
+        return markdown.Image(parent, src=token["src"])

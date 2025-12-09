@@ -300,6 +300,47 @@ class TestMarkdownFloat(unittest.TestCase):
         self.assertRegex(cells[1][1], r"^:-+:$")
         self.assertRegex(cells[1][2], r"^-+:$")
 
+    def test_image(self):
+        # No caption no label
+        img = markdown.Image(src="image.png")
+        self.assertEqual(img.write(), "![](image.png)")
+
+        # No caption
+        img = markdown.Image(src="image.png")
+        img.id = "label"
+        self.assertEqual(img.write(), "![](image.png){#label}")
+
+        # No label
+        img = markdown.Image(src="image.png")
+        markdown.Text(markdown.Caption(img), content="Caption")
+        self.assertEqual(img.write(), "![Caption](image.png)")
+
+        # Caption and label
+        img = markdown.Image(src="image.png")
+        markdown.Text(markdown.Caption(img), content="Caption")
+        img.id = "label"
+        self.assertEqual(img.write(), "![Caption](image.png){#label}")
+
+        # From float, no caption no label
+        flt = markdown.Float()
+        img = markdown.Image(flt, src="image.png")
+        self.assertEqual(flt.write(), "![](image.png)")
+
+        # From float, no label
+        flt = markdown.Float()
+        cap = markdown.Caption(flt)
+        markdown.Text(cap, content="Caption")
+        img = markdown.Image(flt, src="image.png")
+        self.assertEqual(flt.write(), "![Caption](image.png)")
+
+        # From float
+        flt = markdown.Float()
+        cap = markdown.Caption(flt)
+        cap.id = "label"
+        markdown.Text(cap, content="Caption")
+        img = markdown.Image(flt, src="image.png")
+        self.assertEqual(flt.write(), "![Caption](image.png){#label}")
+
 
 if __name__ == "__main__":
     unittest.main(verbosity=2)
