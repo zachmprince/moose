@@ -10,7 +10,7 @@ import os
 import logging
 from ..common import exceptions
 from ..base import components, LatexRenderer, MarkdownReader
-from ..tree import tokens, html, latex
+from ..tree import tokens, html, latex, markdown
 from . import command, core, floats
 
 LOG = logging.getLogger(__name__)
@@ -280,6 +280,9 @@ class RenderAlgorithm(components.RenderComponent):
     def createLatex(self, parent, token, page):
         pass
 
+    def createMarkdown(self, parent, token, page):
+        return markdown.Paragraph(parent)
+
 
 class RenderAlgorithmFloat(floats.RenderFloat):
 
@@ -311,3 +314,14 @@ class RenderAlgorithmComponent(components.RenderComponent):
 
     def createLatex(self, parent, token, page):
         pass
+
+    def createMarkdown(self, parent, token, page):
+        line = f"{token["line"]}: " + " " * 4 * token["level"]
+        markdown.Text(parent, content=line)
+        if token["content"]:
+            self.renderer.render(parent, token["content"], page)
+        if token["comment"]:
+            markdown.Text(parent, content=" # ")
+            self.renderer.render(parent, token["comment"], page)
+        markdown.MarkdownNode(parent, "LineBreak")
+        return parent
