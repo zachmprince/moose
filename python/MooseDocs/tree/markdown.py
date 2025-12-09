@@ -105,7 +105,12 @@ class MarkdownNode(NodeBase):
 
     def to_panflute(self) -> pf.Element:
         children = self._materialize_children()
-        return self._pf_cls(*children, **self["pf_kwargs"])
+        try:
+            return self._pf_cls(*children, **self["pf_kwargs"])
+        except Exception as e:
+            raise ValueError(
+                f"Error converting {type(self)} to panflute:\n{self}"
+            ) from e
 
     def write(self) -> str:
         try:

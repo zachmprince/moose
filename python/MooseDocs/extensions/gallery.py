@@ -10,7 +10,7 @@ import os
 import logging
 from ..common import exceptions
 from ..base import components, LatexRenderer
-from ..tree import tokens, html, latex
+from ..tree import tokens, html, latex, markdown
 from . import command, core, media
 
 LOG = logging.getLogger(__name__)
@@ -172,6 +172,32 @@ class RenderCard(components.RenderComponent):
 
         return latex.Environment(latex.Environment(parent, "center"), "card", args=args)
 
+    def createMarkdown(self, parent, token, page):
+        """Need to reorganize children a little to add title as caption."""
+
+        def get_child_token(ptoken, name):
+            if ptoken is None:
+                return None
+            return next(
+                (child for child in ptoken.children if child.name == name), None
+            )
+
+        # Get title token
+        content_token = get_child_token(token, "CardContent")
+        title_token = get_child_token(content_token, "CardTitle")
+
+        # Get image token
+        card_image_token = get_child_token(token, "CardImage")
+        image_token = get_child_token(card_image_token, "Image") or get_child_token(
+            card_image_token, "Video"
+        )
+
+        # Change parent of title token
+        if title_token is not None and image_token is not None:
+            title_token.parent = image_token
+
+        return markdown.Float(parent)
+
 
 class RenderCardImage(components.RenderComponent):
     def createHTML(self, parent, token, page):
@@ -181,6 +207,9 @@ class RenderCardImage(components.RenderComponent):
         return html.Tag(parent, "div", class_="card-image")
 
     def createLatex(self, parent, token, page):
+        return parent
+
+    def createMarkdown(self, parent, token, page):
         return parent
 
 
@@ -194,6 +223,9 @@ class RenderCardContent(components.RenderComponent):
     def createMaterialize(self, parent, token, page):
         return html.Tag(parent, "div", class_="card-content")
 
+    def createMarkdown(self, parent, token, page):
+        return parent
+
 
 class RenderCardReveal(components.RenderComponent):
     def createLatex(self, parent, token, page):
@@ -204,6 +236,9 @@ class RenderCardReveal(components.RenderComponent):
 
     def createMaterialize(self, parent, token, page):
         return html.Tag(parent, "div", class_="card-reveal")
+
+    def createMarkdown(self, parent, token, page):
+        return parent
 
 
 class RenderCardTitle(components.RenderComponent):
@@ -223,6 +258,12 @@ class RenderCardTitle(components.RenderComponent):
         elif token["deactivator"]:
             html.Tag(span, "i", class_="material-icons right", string="close")
         return None
+
+    def createMarkdown(self, parent, token, page):
+        if not token["deactivator"]:
+            return markdown.Caption(parent)
+        else:
+            return None
 
 
 class RenderGallery(components.RenderComponent):
@@ -245,3 +286,6 @@ class RenderGallery(components.RenderComponent):
         row = html.Tag(parent, "div", token)
         row.addClass("row")
         return row
+
+    def createMarkdown(self, parent, token, page):
+        return parent
