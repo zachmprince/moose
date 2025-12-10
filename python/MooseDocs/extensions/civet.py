@@ -329,6 +329,9 @@ class RenderCivetTestBadges(components.RenderComponent):
     def createHTML(self, parent, token, page):
         pass
 
+    def createMarkdown(self, parent, token, page):
+        pass
+
     def createMaterialize(self, parent, token, page):
 
         div = html.Tag(parent, "div", class_="moose-civet-badges")
@@ -368,6 +371,9 @@ class RenderCivetTestReport(components.RenderComponent):
         pass
 
     def createHTML(self, parent, token, page):
+        pass
+
+    def createMarkdown(self, parent, token, page):
         pass
 
     def createMaterialize(self, parent, token, page):
