@@ -49,43 +49,33 @@ class TestMarkdownTree(unittest.TestCase):
     def test_lists(self):
         def make_list(parent):
             for i in range(3):
-                li = markdown.MarkdownNode(parent=parent, pf_cls="ListItem")
-                p = markdown.Paragraph(li)
-                markdown.Text(p, content=str(i))
+                li = markdown.ListItem(parent)
+                markdown.Text(li, content=str(i))
 
         ol = markdown.MarkdownNode(pf_cls="OrderedList")
         make_list(ol)
-        self.assertEqual(ol.write(), "1.  0\n\n2.  1\n\n3.  2")
+        self.assertEqual(ol.write(), "1.  0\n2.  1\n3.  2")
 
         ul = markdown.MarkdownNode(pf_cls="BulletList")
         make_list(ul)
-        self.assertEqual(ul.write(), "- 0\n\n- 1\n\n- 2")
+        self.assertEqual(ul.write(), "- 0\n- 1\n- 2")
 
         nl = markdown.MarkdownNode(pf_cls="OrderedList")
-        li1 = markdown.MarkdownNode(nl, pf_cls="ListItem")
-        p1 = markdown.Paragraph(li1)
-        markdown.Text(p1, content="Nested ordered")
+        li1 = markdown.ListItem(nl)
+        markdown.Text(li1, content="Nested ordered")
         ol = markdown.MarkdownNode(li1, pf_cls="OrderedList")
         make_list(ol)
-        li2 = markdown.MarkdownNode(nl, pf_cls="ListItem")
-        p2 = markdown.Paragraph(li2)
-        markdown.Text(p2, content="Nested unordered")
+        li2 = markdown.ListItem(nl)
+        markdown.Text(li2, content="Nested unordered")
         ul = markdown.MarkdownNode(li2, pf_cls="BulletList")
         make_list(ul)
         expected = """1.  Nested ordered
-
     1.  0
-
     2.  1
-
     3.  2
-
 2.  Nested unordered
-
     - 0
-
     - 1
-
     - 2"""
         self.assertEqual(nl.write(), expected)
 

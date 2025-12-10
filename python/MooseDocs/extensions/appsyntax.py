@@ -22,7 +22,7 @@ import MooseDocs
 from .. import common
 from ..common import exceptions, report_error
 from ..base import components, LatexRenderer, MarkdownReader
-from ..tree import html, tokens, latex
+from ..tree import html, tokens, latex, markdown
 from . import command, core, floats, table, autolink, materialicon, modal, alert
 
 LOG = logging.getLogger(__name__)
@@ -778,6 +778,9 @@ class RenderSyntaxList(components.RenderComponent):
 
         return div
 
+    def createMarkdown(self, parent, token, page):
+        return markdown.MarkdownNode(parent, "BulletList")
+
 
 class RenderSyntaxListItem(components.RenderComponent):
     def createHTML(self, parent, token, page):
@@ -811,6 +814,17 @@ class RenderSyntaxListItem(components.RenderComponent):
         if len(token) == 0:
             latex.String(env, content="\\textcolor{red}{No Description.}", escape=False)
         return env
+
+    def createMarkdown(self, parent, token, page):
+        if token["header"]:
+            return None
+
+        # We want to insert a ": " after object name
+        if len(token) > 1:
+            token.insert(1, tokens.String(None, content=":"))
+            token.insert(2, core.Space(None))
+
+        return markdown.ListItem(parent)
 
 
 class RenderInputParametersToken(components.RenderComponent):
@@ -861,6 +875,24 @@ class RenderInputParametersToken(components.RenderComponent):
                 continue
 
             for name, param in params.items():
+                self.renderer.render(parent, param, page)
+
+    def createMarkdown(self, parent, token, page):
+        groups = _get_parameters(token, token["parameters"])
+        for group, params in groups.items():
+            if not params:
+                continue
+
+            h = markdown.Heading(parent, level=token["level"] + 1)
+            markdown.Text(h, content=f"{group.title()} Parameters")
+
+            for name, param in params.items():
+                # Add heading as parameter name
+                ph = markdown.Heading(parent, level=token["level"] + 2)
+                markdown.Text(ph, content="Parameter: ")
+                markdown.Code(ph, content=name)
+
+                # Render parameter into body of heading
                 self.renderer.render(parent, param, page)
 
 
@@ -931,23 +963,11 @@ class RenderParameterToken(components.RenderComponent):
         html.Tag(p, "span", string="C++ Type:")
         html.String(p, content=cpp_type, escape=True)
 
-        doc_unit = param["doc_unit"]
-        # Only display a unit if specified or if the type is likely to have a unit
-        if (
-            doc_unit
-            or "double" in cpp_type
-            or "Variable" in cpp_type
-            or "Postprocessor" in cpp_type
-            or "Funct" in cpp_type
-            or "MaterialProperty" in cpp_type
-        ):
+        doc_unit = _get_unit(param)
+        if doc_unit:
             p = html.Tag(body, "p", class_="moose-parameter-description-doc-unit")
             html.Tag(p, "span", string="Unit:")
-            # If a unit was specified, always display it
-            if doc_unit:
-                html.String(p, content=doc_unit)
-            else:
-                html.String(p, content="(no unit assumed)")
+            html.String(p, content=doc_unit)
 
         if param["doc_range"]:
             p = html.Tag(body, "p", class_="moose-parameter-description-doc-range")
@@ -990,6 +1010,68 @@ class RenderParameterToken(components.RenderComponent):
         latex.Environment(
             parent, "InputParameter", args=args, string=param["description"]
         )
+
+    def createMarkdown(self, parent, token, page):
+        param = token["parameter"]
+
+        if param["deprecated"]:
+            return
+
+        ul = markdown.MarkdownNode(parent, "BulletList")
+
+        def add_field(field, content="", raw=False):
+            li = markdown.ListItem(ul)
+            # Field
+            s = markdown.MarkdownNode(li, "Strong")
+            markdown.Text(s, content=field + ":")
+            # Content
+            if content:
+                if raw:
+                    markdown.MarkdownNode(li, "Space")
+                    markdown.Code(li, content=content)
+                else:
+                    # This allows pandoc to break descriptions over multiple lines
+                    for word in content.split(" "):
+                        markdown.MarkdownNode(li, "Space")
+                        markdown.Text(li, content=word, raw=True)
+            return li
+
+        # Name
+        add_field("Name", param["name"], True)
+
+        # Default
+        default = _format_default(param)
+        add_field("Default", default or "none", True)
+
+        # C++ type
+        add_field("C++ Type", param["cpp_type"], True)
+
+        # Units
+        doc_unit = _get_unit(param)
+        if doc_unit:
+            add_field("Units", doc_unit)
+
+        # Range
+        doc_range = param.get("doc_range", None)
+        if doc_range:
+            add_field("Range", doc_range, True)
+
+        options = param.get("options", "").split()
+        if options:
+            li = add_field("Options")
+            for i, opt in enumerate(options):
+                if i > 0:
+                    markdown.Text(li, content=",")
+                markdown.MarkdownNode(li, "Space")
+                markdown.Code(li, content=opt)
+
+        # Controllable
+        add_field("Controllable", ("Yes" if param["controllable"] else "No"))
+
+        # Description
+        desc = param["description"]
+        if desc:
+            add_field("Description", str(desc))
 
 
 class RenderSyntaxLink(core.RenderLink):
@@ -1057,3 +1139,21 @@ def _format_default(parameter):
         param = repr(param in ["True", "1"])
 
     return str(param) if param else None
+
+
+def _get_unit(param) -> str | None:
+    doc_unit = param.get("doc_unit", None)
+    cpp_type = param["cpp_type"]
+    # Only display a unit if specified or if the type is likely to have a unit
+    if doc_unit:
+        return doc_unit
+    elif (
+        "double" in cpp_type
+        or "Variable" in cpp_type
+        or "Postprocessor" in cpp_type
+        or "Funct" in cpp_type
+        or "MaterialProperty" in cpp_type
+    ):
+        return "(no unit assumed)"
+    else:
+        return None

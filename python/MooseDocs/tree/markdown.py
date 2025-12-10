@@ -191,9 +191,8 @@ class Heading(MarkdownNode):
         super().__init__(parent, level=level, id=str(id), **kwargs)
 
 
-class Code(MarkdownNode):
+class Code(Text):
     DEFAULT_PF_CLASS = pf.Code
-    DEFAULT_PF_KWARGS = {"text": "content"}
 
 
 class CodeBlock(MarkdownNode):
@@ -229,6 +228,11 @@ class Link(MarkdownNode):
             self["pf_kwargs"]["url"] = value
         elif "url" in self["pf_kwargs"]:
             self["pf_kwargs"].pop("url")
+
+
+class ListItem(MarkdownNode):
+    DEFAULT_PF_CLASS = pf.ListItem
+    ENSURE_CHILDREN_ARE_BLOCK = True
 
 
 class Table(MarkdownNode):

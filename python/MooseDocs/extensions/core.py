@@ -711,7 +711,7 @@ class RenderListItem(components.RenderComponent):
         return parent
 
     def createMarkdown(self, parent, token, page):
-        return markdown.MarkdownNode(parent, pf_cls="ListItem")
+        return markdown.ListItem(parent)
 
 
 class RenderString(components.RenderComponent):
