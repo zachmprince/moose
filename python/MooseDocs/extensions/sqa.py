@@ -28,7 +28,7 @@ import moosesqa
 from .. import common
 from ..common import exceptions
 from ..base import components, MarkdownReader, LatexRenderer, HTMLRenderer
-from ..tree import tokens, html, latex, pages
+from ..tree import tokens, html, latex, pages, markdown
 from . import core, command, floats, autolink, civet, appsyntax, table, modal
 
 LOG = logging.getLogger(__name__)
@@ -477,7 +477,7 @@ class SQARequirementsCommand(command.CommandComponent):
                         req.filename,
                         req.requirement_line,
                         req.requirement,
-                        token.get("traceback", None),
+                        t.get("traceback", None),
                         "SQA TOKENIZE ERROR",
                     )
                     LOG.critical(msg)
@@ -502,7 +502,7 @@ class SQARequirementsCommand(command.CommandComponent):
                             detail.filename,
                             detail.detail_line,
                             detail.detail,
-                            token.get("traceback", None),
+                            t.get("traceback", None),
                             "SQA TOKENIZE ERROR",
                         )
                         LOG.critical(msg)
@@ -800,9 +800,10 @@ class SQAReportCommand(command.CommandComponent):
                 p = core.Paragraph(item)
                 tokens.String(p, content="Specification(s): ")
                 for spec in req.specifications:
-                    p = SQARequirementSpecification(item, spec_name=req.name)
-                    s = modal.ModalSourceLink(
-                        p, string=spec.name, content=core.Code(None, content=content)
+                    if p.count > 2:
+                        tokens.String(p, content=", ")
+                    modal.ModalLink(
+                        p, string=spec.name, content=core.Code(None, content=spec.text)
                     )
 
             if token["link_design"] and req.design:
@@ -941,6 +942,14 @@ class RenderSQARequirementMatrixItem(core.RenderListItem):
             args = [latex.Brace(string=label)]
         return latex.Environment(parent, "Requirement", args=args)
 
+    def createMarkdown(self, parent, token, page):
+        li = super().createMarkdown(parent, token, page)
+        s = markdown.MarkdownNode(li, "Span")
+        s.id = token["reqname"]
+        markdown.Text(s, content=token["label"])
+        markdown.Text(li, content=": ")
+        return li
+
 
 class RenderSQARequirementMatrixListItem(RenderSQARequirementMatrixItem):
 
@@ -979,12 +988,18 @@ class RenderSQARequirementMatrixHeading(core.RenderListItem):
         prefix = token.siblings[0]["label"].split(".")[0]
         return latex.Command(parent, "section*", string=prefix + ":~", escape=False)
 
+    def createMarkdown(self, parent, token, page):
+        return None
+
 
 class RenderSQARequirementText(components.RenderComponent):
     def createHTML(self, parent, token, page):
         return parent
 
     def createLatex(self, parent, token, page):
+        return parent
+
+    def createMarkdown(self, parent, token, page):
         return parent
 
 
@@ -1004,7 +1019,7 @@ class RenderSQARequirementDesign(autolink.RenderLinkBase):
             if node is not None:
                 link = autolink.AutoLink(None, page=page)
                 link.info = token.info
-                self.createHTMLHelper(p, link, page, node)
+                self.createHelper(p, link, page, node)
             else:
                 html.Tag(p, "a", string=str(design), class_="moose-error")
 
@@ -1029,6 +1044,20 @@ class RenderSQARequirementDesign(autolink.RenderLinkBase):
                 latex.Command(
                     parent, "textcolor", args=[latex.Brace(string="red")], string=design
                 )
+
+    def createMarkdown(self, parent, token, page):
+        p = markdown.Paragraph(parent)
+        markdown.Text(p, content="Design: ")
+        for i, design in enumerate(token["design"]):
+            if i > 0:
+                markdown.Text(p, content="; ")
+            node = self.findDesign(token["filename"], design, token["line"])
+            if node is not None:
+                link = autolink.AutoLink(None, page=page)
+                link.info = token.info
+                self.createHelper(p, link, page, node)
+            else:
+                markdown.Text(p, content=str(design))
 
 
 class RenderSQARequirementIssues(components.RenderComponent):
@@ -1101,6 +1130,18 @@ class RenderSQARequirementIssues(components.RenderComponent):
                     parent, "href", args=[latex.Brace(string=url)], string=str(issue)
                 )
 
+    def createMarkdown(self, parent, token, page):
+        p = markdown.Paragraph(parent)
+        markdown.Text(p, content="Design: ")
+        for i, issue in enumerate(token["issues"]):
+            if i > 0:
+                markdown.Text(p, content="; ")
+            url = self.getURL(issue, token)
+            link = p
+            if url is not None:
+                link = markdown.Link(p, url=url)
+            markdown.Text(link, content=str(issue))
+
 
 class RenderSQARequirementCollections(components.RenderComponent):
     def createHTML(self, parent, token, page):
@@ -1122,6 +1163,14 @@ class RenderSQARequirementCollections(components.RenderComponent):
             latex.Command(
                 parent, "textcolor", args=[latex.Brace(string="blue")], string=item
             )
+
+    def createMarkdown(self, parent, token, page):
+        p = markdown.Paragraph(parent)
+        markdown.Text(p, content="Collection(s): ")
+        for i, item in enumerate(token["collections"]):
+            if i > 0:
+                markdown.Text(p, content="; ")
+            markdown.Text(p, content=str(item))
 
 
 class RenderSQARequirementTypes(components.RenderComponent):
@@ -1145,6 +1194,14 @@ class RenderSQARequirementTypes(components.RenderComponent):
                 parent, "textcolor", args=[latex.Brace(string="blue")], string=item
             )
 
+    def createMarkdown(self, parent, token, page):
+        p = markdown.Paragraph(parent)
+        markdown.Text(p, content="Type(s): ")
+        for i, item in enumerate(token["types"]):
+            if i > 0:
+                markdown.Text(p, content="; ")
+            markdown.Text(p, content=str(item))
+
 
 class RenderSQARequirementPrerequisites(components.RenderComponent):
     def createHTML(self, parent, token, page):
@@ -1163,6 +1220,15 @@ class RenderSQARequirementPrerequisites(components.RenderComponent):
         labels = [label[1] for label in token["specs"]]
         latex.String(parent, content="; ".join(labels))
 
+    def createMarkdown(self, parent, token, page):
+        p = markdown.Paragraph(parent)
+        markdown.Text(p, content="Prerequisite(s): ")
+        for i, label in enumerate(token["specs"]):
+            if i > 0:
+                markdown.Text(p, content="; ")
+            link = markdown.Link(p, url=f"#{label[0]}")
+            markdown.Text(link, content=label[1])
+
 
 class RenderSQARequirementDetails(components.RenderComponent):
     def createHTML(self, parent, token, page):
@@ -1171,6 +1237,11 @@ class RenderSQARequirementDetails(components.RenderComponent):
     def createLatex(self, parent, token, page):
         return latex.Environment(
             parent, "enumerate", after_begin="", after_end="", info=token.info
+        )
+
+    def createMarkdown(self, parent, token, page):
+        return markdown.MarkdownNode(
+            parent, "OrderedList", pf_kwargs={"style": "LowerAlpha"}
         )
 
 
@@ -1182,6 +1253,9 @@ class RenderSQARequirementDetailItem(components.RenderComponent):
         latex.Command(parent, "item", start="\n", end=" ")
         return parent
 
+    def createMarkdown(self, parent, token, page):
+        return markdown.ListItem(parent)
+
 
 class RenderSQAReport(components.RenderComponent):
 
@@ -1191,6 +1265,10 @@ class RenderSQAReport(components.RenderComponent):
 
     def createLatex(self, parent, token, page):
         msg = "The '!sqa report' command in not supported with Latex output, it is being ignored."
+        LOG.warning(msg)
+
+    def createMarkdown(self, parent, token, page):
+        msg = "The '!sqa report' command in not supported with Markdown output, it is being ignored."
         LOG.warning(msg)
 
     def createMaterialize(self, parent, token, page):
