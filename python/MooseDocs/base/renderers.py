@@ -19,7 +19,7 @@ import copy
 
 import MooseDocs
 from ..common import exceptions, mixins, report_error, Storage
-from ..tree import html, latex, pages
+from ..tree import html, latex, pages, markdown
 
 LOG = logging.getLogger(__name__)
 
@@ -545,3 +545,18 @@ class RevealRenderer(HTMLRenderer):
         else:
             msg = "The component object {} does not have a {} method."
             raise exceptions.MooseDocsException(msg, type(component), self.METHOD)
+
+
+class MarkdownRenderer(Renderer):
+    """
+    Renderer for converting AST to markdown.
+    """
+
+    METHOD = "createMarkdown"
+    EXTENSION = ".md"
+
+    def getRoot(self):
+        """
+        Return markdown root node.
+        """
+        return markdown.MarkdownDocument()

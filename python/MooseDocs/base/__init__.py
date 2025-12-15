@@ -13,7 +13,13 @@ converting Markdown into HTML or LaTeX.
 """
 from .lexers import Lexer, RecursiveLexer, Grammar
 from .readers import Reader, MarkdownReader
-from .renderers import Renderer, HTMLRenderer, MaterializeRenderer, LatexRenderer
+from .renderers import (
+    Renderer,
+    HTMLRenderer,
+    MaterializeRenderer,
+    LatexRenderer,
+    MarkdownRenderer,
+)
 from .renderers import RevealRenderer
 from .Extension import Extension
 from .Translator import Translator
