@@ -2,8 +2,9 @@
 import os
 import unittest
 import logging
+import re
 import moosesyntax
-from MooseDocs.test import MooseDocsTestCase
+from MooseDocs.test import MooseDocsTestCase, CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG
 from MooseDocs.extensions import (
     core,
     command,
@@ -244,6 +245,60 @@ class TestParameters(AppSyntaxTestCase):
         self.assertLatexArg(res(1), 2, "Bracket")
         self.assertIn("The name of the variable", res(1, 0)["content"])
 
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        _, res = self.execute(self.TEXT, renderer=base.MarkdownRenderer())
+
+        counter: dict[str, int] = {"main": 0, "groups": 0, "params": 0}
+        for node in res.children:
+            node_type = node.name
+            self.assertIn(node_type, ("Header", "BulletList"))
+            attr = node.get("pf_kwargs", {})
+
+            # Headers
+            if node_type == "Header":
+                self.assertIn("level", attr)
+                self.assertIn(attr["level"], (2, 3, 4))
+                if attr["level"] == 2:
+                    self.assertIn("Input Parameters", node.write())
+                    counter["main"] += 1
+                elif attr["level"] == 3:
+                    self.assertRegex(node.write(), r"#{3} .* Parameters")
+                    counter["groups"] += 1
+                else:
+                    self.assertRegex(node.write(), r"#{4} Parameter: `\w+`")
+                    counter["params"] += 1
+
+            # List
+            else:
+                self.assertGreater(len(node), 0)
+                keys = set()
+                for item in node.children:
+                    self.assertEqual(item.name, "ListItem")
+                    self.assertGreater(len(item), 1)
+                    self.assertEqual(item(0).name, "Strong")
+                    self.assertSize(item(0), 1)
+                    self.assertEqual(item(0, 0).name, "Str")
+                    key = item(0, 0).get("pf_kwargs", {}).get("text", "")
+                    self.assertTrue(key.endswith(":"))
+                    key = key[:-1]
+                    self.assertNotIn(key, keys)
+                    keys.add(key)
+                self.assertTrue(
+                    {
+                        "Name",
+                        "Default",
+                        "C++ Type",
+                        "Controllable",
+                        "Description",
+                    }.issubset(keys),
+                    str(keys),
+                )
+
+        self.assertEqual(counter["main"], 1)
+        self.assertGreater(counter["groups"], 0)
+        self.assertGreater(counter["params"], 0)
+
 
 class TestParam(AppSyntaxTestCase):
     TEXT = "[!param](/Kernels/Diffusion/variable)"
@@ -305,6 +360,11 @@ class TestParam(AppSyntaxTestCase):
         self.assertSize(res, 2)
         self.assertLatexCommand(res(0), "par")
         self.assertLatexString(res(1), content='"variable"')
+
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        _, res = self.execute(self.TEXT, renderer=base.MarkdownRenderer())
+        self.assertEqual(res.write(), '\\"variable\\"')
 
     def testMissing(self):
         ast = self.tokenize("[!param](/Kernels/Diffusion/foobar)")
@@ -368,6 +428,15 @@ class TestChildren(AppSyntaxTestCase):
         self.assertToken(ast(1, 0), "ListItem", size=1)
         self.assertToken(ast(1, 0, 0), "ModalSourceLink", size=0)
 
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        _, res = self.execute(self.TEXT, renderer=base.MarkdownRenderer())
+        md = res.write().splitlines()
+        self.assertGreater(len(md), 2)
+        self.assertEqual(md[0], "## Child Objects {#child-objects}")
+        for line in md[2:]:
+            self.assertRegex(line, r"\- \(\S+\.h\)")
+
 
 class TestInputs(AppSyntaxTestCase):
     TEXT = "!syntax inputs /Kernels/Diffusion"
@@ -383,6 +452,15 @@ class TestInputs(AppSyntaxTestCase):
         self.assertToken(ast(1), "UnorderedList", class_="moose-list-inputs")
         self.assertToken(ast(1, 0), "ListItem", size=1)
         self.assertToken(ast(1, 0, 0), "ModalSourceLink", size=0)
+
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        _, res = self.execute(self.TEXT, renderer=base.MarkdownRenderer())
+        md = res.write().splitlines()
+        self.assertGreater(len(md), 2)
+        self.assertEqual(md[0], "## Input Files {#input-files}")
+        for line in md[2:]:
+            self.assertRegex(line, r"\- \(\S+\.i\)")
 
 
 class TestComplete(AppSyntaxTestCase):
@@ -434,6 +512,11 @@ class TestRenderSyntaxList(AppSyntaxTestCase):
 
     def testMaterialize(self):
         res = self.render(self.AST, renderer=base.MaterializeRenderer())
+
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        res = self.render(self.AST, renderer=base.MarkdownRenderer())
+        self.assertEqual(res.write(), "- item")
 
 
 class TestSyntaxFailure(AppSyntaxTestCase):

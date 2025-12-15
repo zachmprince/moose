@@ -12,7 +12,7 @@ import unittest
 import logging
 from MooseDocs import common, base
 from MooseDocs.common import exceptions
-from MooseDocs.test import MooseDocsTestCase
+from MooseDocs.test import MooseDocsTestCase, CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG
 from MooseDocs.extensions import core, command, floats, media, gallery
 
 logging.basicConfig()
@@ -66,6 +66,30 @@ class TestCard(MooseDocsTestCase):
         self.assertHTMLString(res(2, 0, 0), "Idaho")
         self.assertHTMLTag(res(2, 0, 1), "i", string="close")
         self.assertHTMLTag(res(2, 1), "p", string="Details")
+
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        _, res = self.execute(
+            "!card Flag_of_Idaho.svg title=Idaho\nDetails",
+            renderer=base.MarkdownRenderer(),
+        )
+        expected = "![Idaho](Flag_of_Idaho.svg)\n\nDetails"
+        self.assertEqual(res.write(), expected)
+
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdownGallery(self):
+        text = (
+            "!gallery!\n"
+            "!card Flag_of_Idaho.svg title=Image 1\n\n"
+            "!card Flag_of_Idaho.svg title=Image 2\n\n"
+            "!card Flag_of_Idaho.svg title=Image 3\n"
+            "!gallery-end!"
+        )
+        _, res = self.execute(text, renderer=base.MarkdownRenderer())
+        expected = ""
+        for i in range(1, 4):
+            expected += f"![Image {i}](Flag_of_Idaho.svg)\n\n"
+        self.assertEqual(res.write(), expected.strip())
 
 
 if __name__ == "__main__":

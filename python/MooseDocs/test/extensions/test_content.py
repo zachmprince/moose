@@ -12,7 +12,7 @@ import unittest
 import logging
 import re
 from MooseDocs import common, base
-from MooseDocs.test import MooseDocsTestCase
+from MooseDocs.test import MooseDocsTestCase, CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG
 import MooseDocs.extensions as extensions
 
 logging.basicConfig()
@@ -97,6 +97,17 @@ class TestContentList(MooseDocsTestCase):
         self.assertLatexArg(res(2), 0, "Brace", "extensions/core.tex")
         self.assertLatexArg(res(2), 1, "Brace", "core-extension")
         self.assertLatex(res(3), "Command", "par")
+
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        _, res = self.execute(
+            "!content list location=extensions", renderer=base.MarkdownRenderer()
+        )
+        expected = (
+            "- [Content Extension](extensions/content.md)\n"
+            "- [Core Extension](extensions/core.md)"
+        )
+        self.assertEqual(res.write(), expected)
 
 
 class TestContentAtoZ(MooseDocsTestCase):
@@ -247,6 +258,25 @@ class TestContentAtoZ(MooseDocsTestCase):
             self.assertHTMLTag(row(i), "div", size=1, class_="col s12 m6 l4")
             self.assertHTMLTag(row(i)(0), "ul", size=sz[i], class_="moose-a-to-z")
 
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        _, res = self.execute(
+            "!content a-to-z location=extensions", renderer=base.MarkdownRenderer()
+        )
+        expected = """## a
+
+- [Acronym Extension](extensions/acronym.md)
+
+## c
+
+- [Content Extension](extensions/content.md)
+- [Core Extension](extensions/core.md)
+
+## t
+
+- [Table Extensions](extensions/table.md)"""
+        self.assertEqual(res.write(), expected)
+
 
 class TestContentToc(MooseDocsTestCase):
     EXTENSIONS = [
@@ -283,6 +313,12 @@ class TestContentToc(MooseDocsTestCase):
         self.assertHTMLString(res(1)(0), content="Two")
         self.assertHTMLTag(res(1)(1), "br", close=False)
 
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        _, res = self.execute(self.TEXT, renderer=base.MarkdownRenderer())
+        expected = "# TOC {#toc}\n\n1.  [One](#one)\n2.  [Two](#two)\n\n## One {#one}\n\n## Two {#two}"
+        self.assertEqual(res.write(), expected)
+
 
 class TestContentOutline(MooseDocsTestCase):
     EXTENSIONS = [
@@ -290,10 +326,14 @@ class TestContentOutline(MooseDocsTestCase):
         extensions.command,
         extensions.heading,
         extensions.content,
+        extensions.materialicon,
     ]
 
     ### TEST CASE 1: OUTLINE DIRECTORY ###
-    TEXT = ["!content outline location=extensions max_level=2 hide=outline-directory"]
+    TEXT = [
+        "!content outline location=extensions max_level=2 hide=outline-directory "
+        "this-icon-inherits-style-settings-from-its-parent"
+    ]
     HEADINGS = [
         {
             "Config Extension": {
@@ -337,7 +377,7 @@ class TestContentOutline(MooseDocsTestCase):
             },
             "Unordered Lists": {"page": "core", "id": "unordered-lists", "level": 2},
             "Ordered List": {"page": "core", "id": "ordered-list", "level": 2},
-            "Shortcuts and Shortcut links": {
+            "Shortcuts and Shortcut links.": {
                 "page": "core",
                 "id": "shortcuts-and-shortcut-links",
                 "level": 2,
@@ -384,8 +424,8 @@ class TestContentOutline(MooseDocsTestCase):
     ### TEST CASE 3: OUTLINE PAGES ###
     TEXT.append(
         "!content outline max_level=6\n"
-        "                 hide=outline-pages\n"
-        "                 pages=core.md materialicon.md content.md"
+        "    hide=outline-pages this-icon-inherits-style-settings-from-its-parent\n"
+        "    pages=core.md materialicon.md content.md"
     )
     HEADINGS.append(
         {
@@ -433,7 +473,7 @@ class TestContentOutline(MooseDocsTestCase):
             },
             "Starting number": {"page": "core", "id": "starting-number", "level": 3},
             "`Nested lists": {"page": "core", "id": "ordered-nested-lists", "level": 3},
-            "Shortcuts and Shortcut links": {
+            "Shortcuts and Shortcut links.": {
                 "page": "core",
                 "id": "shortcuts-and-shortcut-links",
                 "level": 2,
@@ -513,7 +553,10 @@ class TestContentOutline(MooseDocsTestCase):
             recursive=False,
             pages=[],
             max_level=2,
-            hide=["outline-directory"],
+            hide=[
+                "outline-directory",
+                "this-icon-inherits-style-settings-from-its-parent",
+            ],
             no_prefix=[],
             no_count=[],
         )
@@ -541,7 +584,7 @@ class TestContentOutline(MooseDocsTestCase):
             recursive=False,
             pages=["core.md", "materialicon.md", "content.md"],
             max_level=6,
-            hide=["outline-pages"],
+            hide=["outline-pages", "this-icon-inherits-style-settings-from-its-parent"],
             no_prefix=[],
             no_count=[],
         )
@@ -611,6 +654,33 @@ class TestContentOutline(MooseDocsTestCase):
             # swap and update level counters
             previous = current
             count[current - 1] += 1
+
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        for case, text in enumerate(self.TEXT):
+            # Render and remove soft breaks
+            _, res = self.execute(text, renderer=base.MarkdownRenderer())
+            md = res.write()
+            md = re.sub(r"\n\s+(?!\s*\d+\.)", " ", md)
+            md = md.splitlines()
+
+            # Construct expected
+            match = re.search(r"max_level=(\d+)", text)
+            max_level = int(match.group(1)) if match else 1
+            expected: list[str] = []
+            for key, head in self.HEADINGS[case].items():
+                if head["level"] > max_level:
+                    continue
+                line = f".{{{4 * (head["level"] - 1)}}}"
+                line += r"\d+\.  "
+                line += re.escape(
+                    f"[{key.replace("`", "")}](extensions/{head['page']}.md#{head['id']})"
+                )
+                expected.append(line)
+
+            self.assertEqual(len(md), len(expected))
+            for r, g in zip(md, expected):
+                self.assertRegex(r, g)
 
 
 class testContentPagination(MooseDocsTestCase):
@@ -761,6 +831,21 @@ class testContentPagination(MooseDocsTestCase):
         self.assertHTMLString(res(1)(1)(0), content="Config Extension")
         self.assertHTMLTag(res(1)(1)(1), "i", size=1, class_="material-icons right")
         self.assertHTMLString(res(1)(1)(1)(0), content="arrow_forward")
+
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        _, res = self.execute(self.TEXT, renderer=base.MarkdownRenderer())
+        md = res.write().splitlines()
+        md = [line for line in md if line]
+        expected = [
+            r"\[.\ Previous\]\(extensions/materialicon\.md\)",
+            r"\[Next\ .\]\(extensions/config\.md\)",
+            r"\[.\ Material Icon\]\(extensions/materialicon\.md\)",
+            r"\[Config Extension\ .\]\(extensions/config\.md\)",
+        ]
+        self.assertEqual(len(md), len(expected))
+        for c, g in zip(md, expected):
+            self.assertRegex(c, g)
 
 
 class TestMissingExternalContentList(MooseDocsTestCase):

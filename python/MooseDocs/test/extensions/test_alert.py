@@ -11,8 +11,9 @@
 import unittest
 import logging
 from MooseDocs import common, base
-from MooseDocs.test import MooseDocsTestCase
+from MooseDocs.test import MooseDocsTestCase, CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG
 from MooseDocs.extensions import core, command, alert
+from MooseDocs.tree import markdown
 
 logging.basicConfig()
 
@@ -106,6 +107,14 @@ class TestAlertBrands(MooseDocsTestCase):
             for j in range(len(self.MESSAGE[i])):
                 self.assertLatexString(res(0)(j + 1), content=self.MESSAGE[i][j])
 
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        for i, b in enumerate(self.BRANDS):
+            _, res = self.execute(self.TEXT[i], renderer=base.MarkdownRenderer())
+            icon = markdown.Icon.ICON_EMOJI_DICT[self.ICONS[i]].decode("utf-8")
+            expected = f"> [!{b.upper()}]  \n> {icon}\n>\n> {''.join(self.MESSAGE[i])}"
+            self.assertEqual(res.write(), expected)
+
 
 class TestAlertConstruction(MooseDocsTestCase):
     EXTENSIONS = [core, command, alert]
@@ -177,6 +186,14 @@ class TestAlertConstruction(MooseDocsTestCase):
         self.assertLatexArg(res(0), 0, "Bracket", "construction")
         self.assertLatexArg(res(0), 1, "Brace", "construction")
 
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        _, res = self.execute(self.TEXT, renderer=base.MarkdownRenderer())
+        icon = markdown.Icon.ICON_EMOJI_DICT["build"].decode("utf-8")
+        msg = self.TEXT.split("\n")[-1]
+        expected = f"> [!CONSTRUCTION]  \n> {icon}\n>\n> {msg}"
+        self.assertEqual(res.write(), expected)
+
 
 class TestAlertConstructionNoIcon(MooseDocsTestCase):
     EXTENSIONS = [core, command, alert]
@@ -238,6 +255,13 @@ class TestAlertConstructionNoIcon(MooseDocsTestCase):
         self.assertLatexString(res(0)(2), content=" ")
         self.assertLatexString(res(0)(3), content="construction")
         self.assertLatexString(res(0)(4), content=".")
+
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        _, res = self.execute(self.TEXT, renderer=base.MarkdownRenderer())
+        msg = self.TEXT.split("\n")[-1]
+        expected = f"> [!CONSTRUCTION]  \n>\n> {msg}"
+        self.assertEqual(res.write(), expected)
 
 
 class TestAlertTitle(MooseDocsTestCase):
@@ -334,6 +358,14 @@ class TestAlertTitle(MooseDocsTestCase):
         self.assertLatexString(res(0)(6), content=" ")
         self.assertLatexString(res(0)(7), content="title")
         self.assertLatexString(res(0)(8), content=".")
+
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        _, res = self.execute(self.TEXT, renderer=base.MarkdownRenderer())
+        icon = markdown.Icon.ICON_EMOJI_DICT["comment"].decode("utf-8")
+        msg = self.TEXT.split("\n")[-1]
+        expected = f"> [!NOTE]  \n> {icon} **A Title**\n>\n> {msg}"
+        self.assertEqual(res.write(), expected)
 
 
 class TestAlertTitleNoPrefix(MooseDocsTestCase):
@@ -521,6 +553,14 @@ class TestAlertTitleLink(MooseDocsTestCase):
         self.assertLatexString(res(0)(5), content="link")
         self.assertLatexString(res(0)(6), content=".")
 
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        _, res = self.execute(self.TEXT, renderer=base.MarkdownRenderer())
+        icon = markdown.Icon.ICON_EMOJI_DICT["school"].decode("utf-8")
+        msg = self.TEXT.split("\n")[-1]
+        expected = f"> [!TIP]  \n> {icon} **[Google](https://google.com)**\n>\n> {msg}"
+        self.assertEqual(res.write(), expected)
+
 
 class TestAlertWithCode(MooseDocsTestCase):
     EXTENSIONS = [core, command, alert]
@@ -623,6 +663,14 @@ class TestAlertWithCode(MooseDocsTestCase):
 
         self.assertLatex(res(0)(7), "Environment", "verbatim", size=1)
         self.assertLatexString(res(0)(7)(0), content="intx;")
+
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        _, res = self.execute(self.TEXT, renderer=base.MarkdownRenderer())
+        icon = markdown.Icon.ICON_EMOJI_DICT["report"].decode("utf-8")
+        msg = "\n>".join(["Alert with code.", "", " ``` cpp", " intx;", " ```"])
+        expected = f"> [!ERROR]  \n> {icon}\n>\n> {msg}"
+        self.assertEqual(res.write(), expected)
 
 
 if __name__ == "__main__":

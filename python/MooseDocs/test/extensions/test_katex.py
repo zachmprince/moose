@@ -12,7 +12,7 @@ import mock
 import unittest
 import logging
 import collections
-from MooseDocs.test import MooseDocsTestCase
+from MooseDocs.test import MooseDocsTestCase, CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG
 from MooseDocs.extensions import core, floats, heading, command, katex, include, config
 from MooseDocs import base, common
 from MooseDocs.tree import pages, tokens
@@ -169,6 +169,20 @@ class TestRenderEquation(MooseDocsTestCase):
             string='var element = document.getElementById("None");katex.render("y=x", element, {displayMode:false,throwOnError:false});',
         )
 
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testRenderMarkdown(self):
+        ast = katex.Equation(None, tex=r"y=x")
+        res = self.render(ast, renderer=base.MarkdownRenderer())
+        self.assertEqual(res.write(), "$$  \ny=x  \n$$  \n  ")
+
+        ast = katex.Equation(None, tex=r"y=x", label="foo")
+        res = self.render(ast, renderer=base.MarkdownRenderer())
+        self.assertEqual(res.write(), "$$  \n\\label{foo}  \ny=x  \n$$  \n  ")
+
+        ast = katex.Equation(None, tex=r"y=x", inline=True)
+        res = self.render(ast, renderer=base.MarkdownRenderer())
+        self.assertEqual(res.write(), "$y=x$")
+
 
 class TestRenderEquationReference(MooseDocsTestCase):
     EXTENSIONS = TestTokenizeEquation.EXTENSIONS
@@ -242,6 +256,31 @@ class TestRenderEquationReference(MooseDocsTestCase):
         self.assertIn(
             "Could not find equation with key first_law on page extensions/katex_include2.md",
             cm.output[1],
+        )
+
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testRenderMarkdown(self):
+        ast = katex.EquationReference(None, label="second_law")
+        res = self.render(ast, renderer=base.MarkdownRenderer())
+        self.assertEqual(res.write(), "[](#second_law)")
+
+        ast = katex.EquationReference(
+            None, label="second_law", filename="katex_include.md"
+        )
+        res = self.render(ast, renderer=base.MarkdownRenderer())
+        self.assertEqual(
+            res.write(),
+            "[katex_include.md, Eq. (2)](extensions/katex_include.md#second_law)",
+        )
+
+        ast = katex.EquationReference(
+            None, label="second_law", filename="katex_include2.md"
+        )
+        res = self.render(ast, renderer=base.MarkdownRenderer())
+        self.assertEqual(
+            res.write(),
+            "[Equations that are\nFamous, Eq. (2)]"
+            "(extensions/katex_include2.md#second_law)",
         )
 
 

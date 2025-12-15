@@ -11,7 +11,7 @@
 import unittest
 import logging
 from MooseDocs import common, base, tree
-from MooseDocs.test import MooseDocsTestCase
+from MooseDocs.test import MooseDocsTestCase, CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG
 from MooseDocs.extensions import core, command, floats, devel
 
 logging.basicConfig()
@@ -119,6 +119,13 @@ class TestRenderExample(MooseDocsTestCase):
         self.assertLatex(res(0, 1), "Command", "tcblower")
         self.assertLatex(res(0, 2), "Command", "par")
         self.assertLatexString(res(0, 3), content="test")
+
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        ast = self.tokenize("!devel example\ntest")
+        res = self.render(ast, renderer=base.MarkdownRenderer())
+        expected = "``` text\ntest\n```\n\ntest"
+        self.assertEqual(res.write(), expected)
 
 
 if __name__ == "__main__":

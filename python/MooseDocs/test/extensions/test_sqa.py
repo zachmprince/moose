@@ -14,7 +14,7 @@ import logging
 import collections
 import itertools
 import moosesqa
-from MooseDocs.test import MooseDocsTestCase
+from MooseDocs.test import MooseDocsTestCase, CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG
 from MooseDocs.extensions import (
     core,
     command,
@@ -437,6 +437,37 @@ class TestSQARequirementsRender(MooseDocsTestCase):
         self.assertHTMLString(ol(0)(0), "3")
         self.assertHTMLString(ol(0)(1), "D")
 
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testCompleteRenderMarkdown(self):
+        text = "!sqa requirements category=Demo link=False"
+        _, res = self.execute(text, renderer=base.MarkdownRenderer())
+        self.assertSize(res, 3)
+
+        def check_list(node):
+            self.assertEqual(node.name, "BulletList")
+            for item in node.children:
+                self.assertEqual(item.name, "ListItem")
+                self.assertGreater(len(item), 0)
+                self.assertEqual(item(0).name, "Span")
+                self.assertIn("identifier", item(0)["pf_kwargs"])
+                self.assertRegex(item(0, 0)["pf_kwargs"]["text"], r"^\d\.\d\.\d$")
+
+        check_list(res(0))
+        self.assertSize(res(0), 8)
+        detail = res(0, 4, -1)
+        self.assertEqual(detail.name, "OrderedList")
+        self.assertSize(detail, 2)
+        self.assertIn("style", detail["pf_kwargs"])
+        self.assertEqual(detail["pf_kwargs"]["style"], "LowerAlpha")
+
+        check_list(res(1))
+
+        self.assertEqual(
+            res(2).write(),
+            "No requirements of this type exist for this application, "
+            "beyond those of its dependencies.",
+        )
+
     def testSQARequirementMatrix(self):
         tok = sqa.SQARequirementMatrix(None)
 
@@ -456,6 +487,11 @@ class TestSQARequirementsRender(MooseDocsTestCase):
 
         res = self.render(tok, renderer=base.LatexRenderer())
         self.assertSize(res, 0)
+
+        if CAN_DO_MARKDOWN:
+            res = self.render(tok, renderer=base.MarkdownRenderer())
+            self.assertSize(res, 1)
+            self.assertEqual(res(0).name, "BulletList")
 
     def testSQARequirementMatrixItemSatisfied(self):
 
@@ -501,6 +537,13 @@ class TestSQARequirementsRender(MooseDocsTestCase):
         self.assertLatex(res(0), "Environment", "Requirement")
         self.assertLatexArg(res(0), 0, "Brace", string="F1.1.1")
 
+        if CAN_DO_MARKDOWN:
+            res = self.render(tok, renderer=base.MarkdownRenderer())
+            self.assertSize(res, 1)
+            self.assertEqual(res(0).name, "ListItem")
+            self.assertGreater(len(res(0)), 0)
+            self.assertEqual(res(0, 0).write(), "[F1.1.1]{#path:Foo}")
+
     def testSQARequirementMatrixItemUnSatisfied(self):
 
         tok = sqa.SQARequirementMatrixItem(None, label="1.1.1", satisfied=False)
@@ -533,6 +576,13 @@ class TestSQARequirementsRender(MooseDocsTestCase):
         arg = res(0)["args"][0]
         self.assertLatex(arg(0), "Command", "textcolor", string="1.1.1")
         self.assertLatexArg(arg(0), 0, "Brace", string="red")
+
+        if CAN_DO_MARKDOWN:
+            res = self.render(tok, renderer=base.MarkdownRenderer())
+            self.assertSize(res, 1)
+            self.assertEqual(res(0).name, "ListItem")
+            self.assertGreater(len(res(0)), 0)
+            self.assertEqual(res(0, 0).write(), "1.1.1")
 
     def testSQARequirementMatrixListItem(self):
 
@@ -587,6 +637,10 @@ class TestSQARequirementsRender(MooseDocsTestCase):
         res = self.render(tok, renderer=base.LatexRenderer())
         self.assertLatexString(res(0), "stuff")
 
+        if CAN_DO_MARKDOWN:
+            res = self.render(tok, renderer=base.MarkdownRenderer())
+            self.assertEqual(res.write(), "stuff")
+
     @mock.patch.object(sqa.RenderSQARequirementDesign, "findDesign")
     def testSQARequirementDesign(self, mock_design):
         """
@@ -625,6 +679,10 @@ class TestSQARequirementsRender(MooseDocsTestCase):
         self.assertLatex(res(1), "Command", "textcolor")
         self.assertLatexArg(res(1), 0, "Brace", string="red")
         self.assertLatexString(res(1)(0), "file.md")
+
+        if CAN_DO_MARKDOWN:
+            res = self.render(tok, renderer=base.MarkdownRenderer())
+            self.assertEqual(res.write(), "Design: file.md")
 
     def testSQARequirementIssues(self):
 
@@ -694,6 +752,15 @@ class TestSQARequirementsRender(MooseDocsTestCase):
             res(2), 0, "Brace", "https://github.com/idaholab/moose/issues/2"
         )
 
+        if CAN_DO_MARKDOWN:
+            res = self.render(tok, renderer=base.MarkdownRenderer())
+            self.assertEqual(
+                res.write(),
+                "Design: "
+                r"[\#1](https://github.com/idaholab/moose/issues/1); "
+                r"[\#2](https://github.com/idaholab/moose/issues/2)",
+            )
+
     def testSQARequirementPrerequisites(self):
         tok = sqa.SQARequirementPrerequisites(
             None, specs=[("name0", "F1.1"), ("name1", "F1.2")]
@@ -722,6 +789,12 @@ class TestSQARequirementsRender(MooseDocsTestCase):
         res = self.render(tok, renderer=base.LatexRenderer())
         self.assertLatexString(res(0), "Prerequisite(s):~")
         self.assertLatexString(res(1), "F1.1; F1.2")
+
+        if CAN_DO_MARKDOWN:
+            res = self.render(tok, renderer=base.MarkdownRenderer())
+            self.assertEqual(
+                res.write(), "Prerequisite(s): [F1.1](#name0); [F1.2](#name1)"
+            )
 
     def testSQARequirementDetails(self):
 
@@ -752,6 +825,15 @@ class TestSQARequirementsRender(MooseDocsTestCase):
         self.assertLatex(res(0)(0), "Command", "item")
         self.assertLatex(res(0)(1), "Command", "item")
 
+        if CAN_DO_MARKDOWN:
+            res = self.render(tok, renderer=base.MarkdownRenderer())
+            self.assertSize(res, 1)
+            self.assertEqual(res(0).name, "OrderedList")
+            self.assertEqual(res(0)["pf_kwargs"]["style"], "LowerAlpha")
+            self.assertSize(res(0), 2)
+            for item in res(0).children:
+                self.assertEqual(item.name, "ListItem")
+
     def testSQARequirementMatrixHeading(self):
 
         root = sqa.SQARequirementMatrix(None)
@@ -771,6 +853,10 @@ class TestSQARequirementsRender(MooseDocsTestCase):
         res = self.render(tok, renderer=base.LatexRenderer())
         self.assertSize(res, 1)
         self.assertLatex(res(0), "Command", "section*", string="F1:~")
+
+        if CAN_DO_MARKDOWN:
+            res = self.render(tok, renderer=base.MarkdownRenderer())
+            self.assertSize(res, 0)
 
 
 class TestSQARequiremetnsWithCollectionsAndTypesAST(MooseDocsTestCase):

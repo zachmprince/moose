@@ -7,10 +7,9 @@
 #
 # Licensed under LGPL 2.1, please see LICENSE for details
 # https://www.gnu.org/licenses/lgpl-2.1.html
-
 import unittest
 import logging
-from MooseDocs.test import MooseDocsTestCase
+from MooseDocs.test import MooseDocsTestCase, CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG
 from MooseDocs.extensions import core, modal
 from MooseDocs import base
 
@@ -115,6 +114,12 @@ class TestModalLink(MooseDocsTestCase):
         res = self.render(ast, renderer=base.LatexRenderer())
         self.assertSize(res, 1)
         self.assertLatexString(res(0), content="test")
+
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        ast = modal.ModalLink(None, string="test")
+        res = self.render(ast, renderer=base.MarkdownRenderer())
+        self.assertEqual(res.write(), "test")
 
 
 class TestModalSourceLink(MooseDocsTestCase):
@@ -333,6 +338,22 @@ class TestModalSourceLinkDisableSource(MooseDocsTestCase):
         self.assertLatexString(res(0), content="test")
 
         print(res, "\n")
+
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        ast = modal.ModalSourceLink(None, src="framework/Makefile")
+        res = self.render(ast, renderer=base.MarkdownRenderer())
+        self.assertEqual(
+            res.write(), "(python/MooseDocs/test/extensions/framework/Makefile)"
+        )
+
+        ast = modal.ModalSourceLink(
+            None,
+            string="test",
+            src="moose/test/tests/kernels/simple_diffusion/simple_diffusion.i",
+        )
+        res = self.render(ast, renderer=base.MarkdownRenderer())
+        self.assertEqual(res.write(), "test")
 
 
 if __name__ == "__main__":

@@ -10,7 +10,7 @@
 
 import unittest
 import logging
-from MooseDocs.test import MooseDocsTestCase
+from MooseDocs.test import MooseDocsTestCase, CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG
 from MooseDocs.extensions import core, special
 from MooseDocs import base
 
@@ -26,8 +26,14 @@ class TestSpecial(MooseDocsTestCase):
         self.assertEqual(len(ast), 1)
         self.assertEqual(len(ast(0)), 9)
         self.assertToken(ast(0), "Paragraph")
-        self.assertToken(ast(0, 1), "String", content="&auml;", escape=False)
-        self.assertToken(ast(0, 7), "String", content="&#228;", escape=False)
+        self.assertToken(ast(0, 1), "HTMLCode", content="&auml;", escape=False)
+        self.assertToken(ast(0, 7), "HTMLCode", content="&#228;", escape=False)
+
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        _, res = self.execute(self.TEXT, renderer=base.renderers.MarkdownRenderer())
+        symbol = b"\xc3\xa4".decode("utf-8")
+        self.assertEqual(res.write(), f"Sch{symbol}dle and Sch{symbol}dle")
 
 
 if __name__ == "__main__":

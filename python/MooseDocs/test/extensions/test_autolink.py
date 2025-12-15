@@ -11,7 +11,7 @@
 import mock
 import unittest
 import logging
-from MooseDocs.test import MooseDocsTestCase
+from MooseDocs.test import MooseDocsTestCase, CAN_DO_MARKDOWN
 from MooseDocs.extensions import core, floats, heading, autolink, modal
 from MooseDocs import base, common
 
@@ -303,6 +303,10 @@ class TestAutoLinkRender(MooseDocsTestCase):
         self.assertHTMLTag(res, "div", size=1)
         self._assertHTML(res(0))
 
+        if CAN_DO_MARKDOWN:
+            res = self.render(link, renderer=base.MarkdownRenderer())
+            self.assertEqual(res.write(), "[Core Extension](extensions/core.md)")
+
     def _testOptionalHelper(self, link):
         res = self.render(link, renderer=base.HTMLRenderer())
         self.assertHTMLTag(res, "body", string="not_a_file.md")
@@ -312,6 +316,10 @@ class TestAutoLinkRender(MooseDocsTestCase):
 
         res = self.render(link, renderer=base.RevealRenderer())
         self.assertHTMLTag(res, "div", string="not_a_file.md")
+
+        if CAN_DO_MARKDOWN:
+            res = self.render(link, renderer=base.MarkdownRenderer())
+            self.assertEqual(res.write(), "not_a_file.md")
 
     def _testBookmarkHelper(self, link):
         res = self.render(link, renderer=base.HTMLRenderer())
@@ -340,6 +348,13 @@ class TestAutoLinkRender(MooseDocsTestCase):
         self.assertHTMLString(res(0)(0), "Nested")
         self.assertHTMLString(res(0)(1), " ")
         self.assertHTMLString(res(0)(2), "lists")
+
+        if CAN_DO_MARKDOWN:
+            res = self.render(link, renderer=base.MarkdownRenderer())
+            self.assertEqual(
+                res.write(),
+                "[Nested lists](extensions/core.md#unordered-nested-lists)",
+            )
 
     def testMinimal(self):
         link = autolink.AutoLink(None, page="core.md")
@@ -546,6 +561,10 @@ class TestLocalLinkRender(MooseDocsTestCase):
         res = self.render(link, renderer=base.LatexRenderer())
         self.assertSize(res, 1)
         self.assertLatexString(res(0), "_text_")
+
+        if CAN_DO_MARKDOWN:
+            res = self.render(link, renderer=base.MarkdownRenderer())
+            self.assertEqual(res.write(), "[\\_text\\_#bookmark](#bookmark)")
 
     @mock.patch.object(heading, "find_heading")
     def testMinimalLatex(self, mock_find_heading):

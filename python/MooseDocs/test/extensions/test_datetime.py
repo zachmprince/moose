@@ -12,7 +12,7 @@ import unittest
 import logging
 import datetime as dt
 from MooseDocs import common, base
-from MooseDocs.test import MooseDocsTestCase
+from MooseDocs.test import MooseDocsTestCase, CAN_DO_MARKDOWN
 from MooseDocs.extensions import core, command, datetime
 
 logging.basicConfig()
@@ -66,6 +66,10 @@ class TestDateTimeToday(MooseDocsTestCase):
 
         res = self.render(ast, renderer=base.LatexRenderer())
         self.assertLatexString(res(0), content="1980-06-24")
+
+        if CAN_DO_MARKDOWN:
+            res = self.render(ast, renderer=base.MarkdownRenderer())
+            self.assertEqual(res.write(), "1980-06-24")
 
 
 if __name__ == "__main__":

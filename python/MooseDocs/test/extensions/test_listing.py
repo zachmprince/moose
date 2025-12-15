@@ -13,7 +13,7 @@ import logging
 import re
 import json
 from MooseDocs import MOOSE_DIR, common, base
-from MooseDocs.test import MooseDocsTestCase
+from MooseDocs.test import MooseDocsTestCase, CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG
 from MooseDocs.test.extensions.test_appsyntax import AppSyntaxTestCase
 from MooseDocs.extensions import (
     core,
@@ -166,6 +166,21 @@ class TestListingNumbers(MooseDocsTestCase):
             self.assertLatexString(res(i), content="Listing~")
             self.assertLatexCommand(res(j), "ref", size=1)
             self.assertLatexString(res(j, 0), content=s)
+
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        _, res = self.execute(self.TEXT, renderer=base.MarkdownRenderer())
+        lines = res.write().splitlines()
+        self.assertEqual(len(lines), len(self.SHORTCUTS) * 6 + 1)
+        links = ""
+        for i, name in enumerate(self.SHORTCUTS):
+            self.assertEqual(lines[i * 6], f"[Listing {i + 1}: ]{{#{name}}}")
+            self.assertEqual(lines[i * 6 + 2], "``` ")
+            self.assertEqual(lines[i * 6 + 3], f"{name.capitalize()}")
+            self.assertEqual(lines[i * 6 + 4], "```")
+            links += f"[Listing {i + 1}](#{name})"
+
+        self.assertEqual(lines[-1], "".join(links))
 
 
 class TestListingCaptions(MooseDocsTestCase):
@@ -383,6 +398,19 @@ class TestListingCaptions(MooseDocsTestCase):
         self.assertLatexCommand(res(4), "ref", size=1)
         self.assertLatexString(res(4, 0), content="file1")
 
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        for case, txt in enumerate(self.TEXT):
+            _, res = self.execute(txt, renderer=base.MarkdownRenderer())
+            md = res.write()
+            expected = f"``` \n{self.CODE[case]}\n```"
+            self.assertIn(expected, md)
+            if case == 1:
+                self.assertIn("the **caption**", md)
+            elif case == 2:
+                self.assertIn("[File 1: the [caption]{.underline}]{#file1}", md)
+                self.assertIn("[File 1](#file1)", md)
+
 
 class TestListingWithSpace(MooseDocsTestCase):
     EXTENSIONS = [core, command, floats, listing, modal]
@@ -439,6 +467,12 @@ class TestListingWithSpace(MooseDocsTestCase):
         )
         self.assertLatexString(res(0, 0), content=self.CODE.strip("\n"))
 
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        _, res = self.execute(self.TEXT, renderer=base.MarkdownRenderer())
+        expected = f"``` \n{self.CODE}```"
+        self.assertEqual(res.write(), expected)
+
 
 class TestListingLanguage(MooseDocsTestCase):
     EXTENSIONS = [core, command, floats, listing, modal]
@@ -480,6 +514,12 @@ class TestListingLanguage(MooseDocsTestCase):
             info=ast.info,
         )
         self.assertLatexString(res(0, 0), content=self.CODE.strip("\n"))
+
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        _, res = self.execute(self.TEXT, renderer=base.MarkdownRenderer())
+        expected = f"``` c++\n{self.CODE}\n```"
+        self.assertEqual(res.write(), expected)
 
 
 class TestFileListing(MooseDocsTestCase):
@@ -616,6 +656,12 @@ class TestFileListing(MooseDocsTestCase):
         self.assertLatexString(res(0, 0), content=self.CODE[1].strip("\n"))
         self.assertLatexString(res(1), content="(framework/src/kernels/Diffusion.C)")
 
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        _, res = self.execute(self.TEXT[0], renderer=base.MarkdownRenderer())
+        expected = f"[Listing 1: ]{{#diffusion-c}}\n\n``` cpp{self.CODE[0]}```"
+        self.assertEqual(res.write(), expected)
+
 
 class TestFileListingDiff(MooseDocsTestCase):
     EXTENSIONS = [core, command, floats, listing, modal]
@@ -721,6 +767,12 @@ class TestFileListingDiff(MooseDocsTestCase):
             res(1, 0), content=f"({self.BEFORE_PREFIX} {self.DIFF_FILE})"
         )
         self.assertHTMLString(res(3, 0), content=f"({self.AFTER_PREFIX} {self.FILE})")
+
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        _, res = self.execute(self.TEXT, renderer=base.MarkdownRenderer())
+        expected = f"``` diff-cpp diff-highlight\n{self.DIFF}```"
+        self.assertIn(expected, res.write())
 
     def testCodeDiff(self):
         CODE_split = self.CODE.splitlines()
@@ -943,6 +995,19 @@ class TestInputListing(MooseDocsTestCase):
             )
             self.assertLatexString(res(0, 0), content=self.CODE[i].strip("\n"))
 
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        for txt, code, file in zip(self.TEXT, self.CODE, self.FILE):
+            _, res = self.execute(txt, renderer=base.MarkdownRenderer())
+            lang = "moose" if file.endswith(".i") else "text"
+            expected = ""
+            if "prefix=" in txt:
+                expected += "[xxxxx 1: ]{#prfx}\n\n"
+            expected += f"``` {lang}\n{code}```"
+            if "link=False" not in txt:
+                expected += f"\n\n({file})"
+            self.assertEqual(res.write(), expected)
+
 
 class TestMooseParsedInput(AppSyntaxTestCase):
 
@@ -1025,6 +1090,14 @@ class TestMooseParsedInput(AppSyntaxTestCase):
         self.assertSize(ast, 1)
         code = "\n".join(self.text.splitlines()[1:-1]) + "\n"
         self.assertToken(ast(0), "Code", language="moose", content=code)
+
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        _, res = self.execute(self.text, renderer=base.MarkdownRenderer())
+        expected = "``` moose\n"
+        expected += "\n".join(self.text.splitlines()[1:-1])
+        expected += "\n```"
+        self.assertEqual(res.write(), expected)
 
     def _assertHTML(self, res):
         self.assertHTMLTag(res, "pre", size=1, class_="")

@@ -222,7 +222,7 @@ class TestPySyntaxExtension(MooseDocsTestCase):
         self.assertToken(
             ast(0, 1),
             "Monospace",
-            string="MooseDocs.extensions.pysyntax.PySyntaxExtension(**kwargs)",
+            content="MooseDocs.extensions.pysyntax.PySyntaxExtension(**kwargs)",
         )
         self.assertToken(ast(0, 2), "Paragraph", size=14)
         self.assertToken(ast(0, 2, 0), "Word", content="Extension")
@@ -230,7 +230,7 @@ class TestPySyntaxExtension(MooseDocsTestCase):
             ast(0, 3), "Heading", level=3, class_="moose-pysyntax-member-heading"
         )
         self.assertToken(ast(0, 3, 0), "Strong")
-        self.assertToken(ast(0, 3, 0, 0), "Monospace", string="EXTENSION_COMMANDS")
+        self.assertToken(ast(0, 3, 0, 0), "Monospace", content="EXTENSION_COMMANDS")
         self.assertToken(ast(0, 4), "Paragraph")
 
     def testFunctionCommandAST(self):
@@ -243,7 +243,7 @@ class TestPySyntaxExtension(MooseDocsTestCase):
         )
         self.assertToken(ast(0, 0, 0), "Strong")
         self.assertToken(
-            ast(0, 0, 0, 0), "Monospace", string="make_extension(**kwargs)"
+            ast(0, 0, 0, 0), "Monospace", content="make_extension(**kwargs)"
         )
 
 

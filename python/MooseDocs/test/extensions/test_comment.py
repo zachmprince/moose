@@ -10,7 +10,7 @@
 
 import unittest
 import logging
-from MooseDocs.test import MooseDocsTestCase
+from MooseDocs.test import MooseDocsTestCase, CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG
 from MooseDocs.extensions import core, comment
 from MooseDocs import base
 
@@ -48,6 +48,11 @@ class TestInlineComment(MooseDocsTestCase):
     def testReveal(self):
         _, res = self.execute(self.TEXT, renderer=base.RevealRenderer())
         self._assertHTML(res)
+
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        _, res = self.execute(self.TEXT, renderer=base.MarkdownRenderer())
+        self.assertEqual(res.write(), "Not comment and not")
 
     def _assertHTML(self, res):
         self.assertEqual(len(res), 1)

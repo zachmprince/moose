@@ -10,7 +10,7 @@
 
 import unittest
 import logging
-from MooseDocs.test import MooseDocsTestCase
+from MooseDocs.test import MooseDocsTestCase, CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG
 from MooseDocs.extensions import core, command, floats, table, acronym
 from MooseDocs import base
 
@@ -56,6 +56,11 @@ class TestInlineAcronym(MooseDocsTestCase):
         self.assertLatexString(res(3), "and")
         self.assertLatexString(res(4), " ")
         self.assertLatexString(res(5), "INL")
+
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        _, res = self.execute(self.TEXT, renderer=base.MarkdownRenderer())
+        self.assertEqual(res.write(), "Idaho National Laboratory (INL) and INL")
 
     def _assertHTML(self, res):
         self.assertSize(res, 1)
@@ -128,6 +133,16 @@ class TestAcronymList(MooseDocsTestCase):
         self.assertLatexString(res(0)(0), "MSU&Montana State University\\\\")
         self.assertLatexString(res(0)(1), "WSU&Washington State University\\\\")
         self.assertLatexString(res(0)(2), "MTU&Michigan Technological University\\\\")
+
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        _, res = self.execute(self.TEXT, renderer=base.MarkdownRenderer())
+        expected = """| Acronym | Description                       |
+|---------|-----------------------------------|
+| MSU     | Montana State University          |
+| MTU     | Michigan Technological University |
+| WSU     | Washington State University       |"""
+        self.assertEqual(res.write(), expected)
 
     def _assertHTML(self, res):
         self.assertSize(res, 1)  # root

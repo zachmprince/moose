@@ -12,7 +12,7 @@ import unittest
 import logging
 from MooseDocs import common, base
 from MooseDocs.common import exceptions
-from MooseDocs.test import MooseDocsTestCase
+from MooseDocs.test import MooseDocsTestCase, CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG
 from MooseDocs.extensions import core, command, floats, media
 
 logging.basicConfig()
@@ -147,6 +147,19 @@ class TestImage(MooseDocsTestCase):
         self.assertLatexString(res(0, 1, 1), "test")
         self.assertLatexCommand(res(0, 0), "includegraphics")
         self.assertIn("Flag_of_Idaho.pdf", res(0, 0, 0)["content"])
+
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        _, res = self.execute(
+            "!media Flag_of_Idaho.svg", renderer=base.MarkdownRenderer()
+        )
+        self.assertEqual(res.write(), "![](Flag_of_Idaho.svg)")
+
+        _, res = self.execute(
+            "!media Flag_of_Idaho.svg caption=test id=idaho",
+            renderer=base.MarkdownRenderer(),
+        )
+        self.assertEqual(res.write(), "![Figure 1: test](Flag_of_Idaho.svg){#idaho}")
 
 
 class TestVideo(MooseDocsTestCase):
@@ -360,6 +373,14 @@ class TestVideo(MooseDocsTestCase):
             res(0, 2), "url", string="http://clips.vorwaerts-gmbh.de/VfE.webm"
         )
 
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        link = "http://clips.vorwaerts-gmbh.de/VfE.webm"
+        _, res = self.execute(
+            f"!media {link} caption=test id=idaho", renderer=base.MarkdownRenderer()
+        )
+        self.assertEqual(res.write(), f"![Figure 1: test]({link}){{#idaho}}")
+
 
 class TestYouTube(MooseDocsTestCase):
     EXTENSIONS = [core, command, floats, media]
@@ -381,6 +402,12 @@ class TestYouTube(MooseDocsTestCase):
         self.assertHTMLTag(res, "body", size=1)
         self.assertHTMLTag(res(0), "div", size=1)
         self.assertHTMLTag(res(0, 0), "iframe", src="https://www.youtube.com/not_real")
+
+    @unittest.skipUnless(CAN_DO_MARKDOWN, CAN_DO_MARKDOWN_MSG)
+    def testMarkdown(self):
+        link = "https://www.youtube.com/not_real"
+        _, res = self.execute(f"!media {link}", renderer=base.MarkdownRenderer())
+        self.assertEqual(res.write(), f"![]({link})")
 
 
 class TestFloatReference(MooseDocsTestCase):

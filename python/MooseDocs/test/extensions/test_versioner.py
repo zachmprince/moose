@@ -12,7 +12,7 @@ import unittest
 import logging
 import os
 import sys
-from MooseDocs.test import MooseDocsTestCase
+from MooseDocs.test import MooseDocsTestCase, CAN_DO_MARKDOWN
 from MooseDocs.extensions import core, command, versioner
 from MooseDocs import base, MOOSE_DIR
 
@@ -55,6 +55,8 @@ class TestTemplate(MooseDocsTestCase):
         This pulls from the Versioner meta in:
         Versioner().get_packages(...)[<package>].full_version"""
         self._testRender("version", ["full_version"])
+        if CAN_DO_MARKDOWN:
+            self._testMarkdownRender("version", ["full_version"])
 
     def testCondaVersionRender(self):
         """Test [!versioner!conda_version package=<package>],
@@ -62,6 +64,8 @@ class TestTemplate(MooseDocsTestCase):
         This pulls from the Versioner meta in:
         Versioner().get_packages(...)[<package>].conda.install"""
         self._testRender("conda_version", ["conda", "install"], conda=True)
+        if CAN_DO_MARKDOWN:
+            self._testMarkdownRender("conda_version", ["conda", "install"], conda=True)
 
     def testCodeRender(self):
         """Test inline replacement within code blocks"""
@@ -76,14 +80,31 @@ class TestTemplate(MooseDocsTestCase):
             text += f"module load {name}/__VERSIONER_VERSION_{package_inline}__\n"
             text += "!versioner-end!\n"
 
-            _, res = self.execute(text, renderer=base.MaterializeRenderer())
-            self.assertHTMLTag(res, "div", size=1)
-
             expected_text = ""
             if package.conda:
                 expected_text = f"conda install {name}={package.conda.install}\n"
             expected_text += f"module load {name}/{package.full_version}\n"
+
+            _, res = self.execute(text, renderer=base.MaterializeRenderer())
+            self.assertHTMLTag(res, "div", size=1)
             self.assertEqual(res(0).text(), expected_text)
+
+            if CAN_DO_MARKDOWN:
+                _, res = self.execute(text, renderer=base.MarkdownRenderer())
+                self.assertEqual(res.write(), f"``` bash\n{expected_text}```")
+
+    def _testMarkdownRender(self, cmd, versioner_keys, conda=None):
+        for name, package in self.packages.items():
+            if conda and not package.conda:
+                continue
+            text = f"The version is [!versioner!{cmd} package={name}]"
+            _, res = self.execute(text, renderer=base.MarkdownRenderer())
+            md = res.write()
+
+            value = package
+            for key in versioner_keys:
+                value = getattr(value, key)
+            self.assertEqual(md, f"The version is {value}")
 
 
 if __name__ == "__main__":

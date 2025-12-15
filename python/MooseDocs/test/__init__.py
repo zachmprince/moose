@@ -12,8 +12,11 @@ import mooseutils
 from mock import patch
 from MooseDocs.common import load_extensions
 from MooseDocs import base
-from MooseDocs.tree import pages, html, latex
+from MooseDocs.tree import pages, html, latex, markdown
 from MooseDocs.extensions import command
+
+CAN_DO_MARKDOWN = markdown.pf is not None
+CAN_DO_MARKDOWN_MSG = "panflute must be installed to test markdown rendering"
 
 
 class MooseDocsTestCase(unittest.TestCase):
