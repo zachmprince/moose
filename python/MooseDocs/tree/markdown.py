@@ -130,7 +130,7 @@ class MarkdownNode(NodeBase):
         return pf.convert_text(
             doc,
             input_format="panflute",
-            output_format="commonmark_x+subscript+superscript-raw_html",
+            output_format="commonmark_x+subscript+superscript-raw_html-gfm_auto_identifiers",
         )
 
 
