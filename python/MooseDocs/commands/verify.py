@@ -34,7 +34,7 @@ def command_line_options(subparser, parent):
         "-f",
         "--form",
         default="materialize",
-        choices=["materialize", "html", "latex"],
+        choices=["materialize", "html", "latex", "markdown"],
         help="The desired output format to verify.",
     )
     parser.add_argument(
@@ -177,6 +177,8 @@ def main(options):
         extensions = [".html"]
     elif options.form == "latex":
         extensions = [".tex"]
+    elif options.form == "markdown":
+        extensions = [".md"]
 
     # Compare all files
     errno = 0

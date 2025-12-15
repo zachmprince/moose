@@ -76,6 +76,29 @@
         prereq = verify/latex/barrier
       []
     []
+    [markdown]
+      detail = "markdown;"
+
+      [serial]
+        type = RunCommand
+        command = 'python3 moosedocs.py verify --form markdown --executioner MooseDocs.base.Serial'
+      []
+      [queue]
+        type = RunCommand
+        command = 'python3 moosedocs.py verify --form markdown --executioner MooseDocs.base.ParallelQueue'
+        prereq = verify/markdown/serial
+      []
+      [barrier]
+        type = RunCommand
+        command = 'python3 moosedocs.py verify --form markdown --executioner MooseDocs.base.ParallelBarrier'
+        prereq = verify/markdown/queue
+      []
+      [pipe]
+        type = RunCommand
+        command = 'python3 moosedocs.py verify --form markdown --executioner MooseDocs.base.ParallelPipe'
+        prereq = verify/markdown/barrier
+      []
+    []
   []
 
   [multiconfig_build]

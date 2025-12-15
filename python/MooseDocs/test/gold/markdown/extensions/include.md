@@ -1,0 +1,20 @@
+# Include Extension {#include-extension}
+
+We hold these truths to be self-evident, that all men are created equal,
+that they are endowed by their Creator with certain unalienable Rights,
+that among these are Life, Liberty and the pursuit of Happiness.
+
+We hold these truths to be self-evident, that all men are created equal,
+that they are endowed by
+
+Header \^ Right of the People to alter or to abolish it, and to
+institute new Government\$ Footer
+
+> Congress shall make no law respecting an establishment of religion, or
+> prohibiting the free exercise thereof; or abridging the freedom of
+> speech, or of the press; or the right of the people peaceably to
+> assemble, and to petition the Government for a redress of grievances.
+>
+> A well regulated Militia, being necessary to the security of a free
+> State, the right of the people to keep and bear Arms, shall not be
+> infringed.
