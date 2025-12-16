@@ -53,7 +53,9 @@ class RevealExtension(command.CommandExtension):
         """
         self.requires(core)
 
-        if not isinstance(renderer, renderers.RevealRenderer):
+        if not isinstance(
+            renderer, (renderers.RevealRenderer, renderers.MarkdownRenderer)
+        ):
             self.setActive(False)
 
         else:
@@ -187,7 +189,13 @@ class RenderSection(components.RenderComponent):
     def createReveal(self, parent, token, page):
         return html.Tag(parent, "section")
 
+    def createMarkdown(self, parent, token, page):
+        return parent
+
 
 class RenderNotes(components.RenderComponent):
     def createReveal(self, parent, token, page):
         return html.Tag(parent, "aside", class_="notes")
+
+    def createMarkdown(self, parent, token, page):
+        return None

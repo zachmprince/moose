@@ -21,11 +21,7 @@ class IncludeExtension(command.CommandExtension):
 
     def extend(self, reader, renderer):
         self.requires(command)
-
-        if isinstance(renderer, RevealRenderer):
-            self.addCommand(reader, IncludeSlides())
-        else:
-            self.addCommand(reader, IncludeCommand())
+        self.addCommand(reader, IncludeCommand())
 
     def preRead(self, page):
         page["dependencies"] = set()
@@ -43,12 +39,17 @@ class IncludeCommand(command.CommandComponent):
             False,
             "Toggle the include as optional when the file doesn't exist.",
         )
+        settings["vertical"] = (
+            True,
+            "Included content will be included as vertical slides.",
+        )
         return settings
 
     def createToken(self, parent, info, page, settings):
         """
         Tokenize the included content and create dependency between pages.
         """
+        idx = len(parent.children)
         include_page = self.translator.findPage(
             info["subcommand"], throw_on_zero=not settings["optional"]
         )
@@ -58,24 +59,8 @@ class IncludeCommand(command.CommandComponent):
 
         self.reader.tokenize(parent, content, page, line=line)
         page["dependencies"].add(include_page.uid)
-        return parent
 
-
-class IncludeSlides(IncludeCommand):
-
-    @staticmethod
-    def defaultSettings():
-        settings = IncludeCommand.defaultSettings()
-        settings["vertical"] = (
-            True,
-            "Included content will be included as vertical slides.",
-        )
-        return settings
-
-    def createToken(self, parent, info, page, settings):
-        idx = len(parent.children)
-        IncludeCommand.createToken(self, parent, info, page, settings)
-
+        # This allows for autolinks to work properly when slides are included
         if settings["vertical"]:
             for child in parent.children[idx:]:
                 if child.name == "Section":

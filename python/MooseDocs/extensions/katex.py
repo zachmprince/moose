@@ -27,7 +27,9 @@ def make_extension(**kwargs):
 Equation = tokens.newToken(
     "Equation", tex=r"", inline=False, label=None, number=None, bookmark=None
 )
-EquationReference = tokens.newToken("EquationReference", label=None, filename=None)
+EquationReference = tokens.newToken(
+    "EquationReference", label=None, filename=None, optional=False
+)
 
 
 class KatexExtension(command.CommandExtension):
@@ -227,6 +229,10 @@ class EquationReferenceCommand(command.CommandComponent):
     @staticmethod
     def defaultSettings():
         settings = command.CommandComponent.defaultSettings()
+        settings["optional"] = (
+            False,
+            "Toggle the reference as optional when the equation doesn't exist.",
+        )
         return settings
 
     def createToken(self, parent, info, page, settings):
@@ -242,7 +248,10 @@ class EquationReferenceCommand(command.CommandComponent):
             raise common.exceptions.MooseDocsException("Invalid equation label format.")
 
         EquationReference(
-            parent, label=match.group("label"), filename=match.group("filename")
+            parent,
+            label=match.group("label"),
+            filename=match.group("filename"),
+            optional=settings["optional"],
         )
         return parent
 
@@ -361,6 +370,9 @@ class RenderEquationReference(core.RenderShortcutLink):
                 html.String(a, content=token["filename"] + ", ")
 
         num, id_ = eq_page["labels"].get(token["label"], (None, None))
+        if token["optional"] and num is None:
+            num = "?"
+
         # TODO: Error if label not found
         if eq_page is not page:
             url = eq_page.relativeDestination(page)
@@ -392,6 +404,8 @@ class RenderEquationReference(core.RenderShortcutLink):
         )
 
         num, _ = eq_page["labels"].get(token["label"], (None, None))
+        if token["optional"] and num is None:
+            num = "?"
         id = token["label"]
         if eq_page is not page:
             url = f"{eq_page.relativeDestination(page)}#{id}"

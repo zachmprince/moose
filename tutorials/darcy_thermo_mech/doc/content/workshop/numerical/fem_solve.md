@@ -68,7 +68,7 @@ u(\vec{x}_{q}) &\approx u_h(\vec{x}_{q}) = \sum u_j \phi_j(\vec{x}_{q}) \\
 \nabla u (\vec{x}_{q}) &\approx \nabla u_h(\vec{x}_{q}) = \sum u_j \nabla \phi_j(\vec{x}_{q})
 \end{aligned}
 
-Thus, the weak form of [example_weak_form2] becomes:
+Thus, the weak form of [!eqref](example_weak_form2) becomes:
 
 !equation id=example_weak_residual
 \begin{aligned}

@@ -53,7 +53,7 @@ test functions:
 !equation
 \psi = \{\phi_i\}_{i=1}^N
 
-Substituting these expansions back into the example weak form ([example_weak_form]) yields:
+Substituting these expansions back into the example weak form ([!eqref](example_weak_form)) yields:
 
 !equation id=example_weak_form2
 \left(\nabla\psi_i, k\nabla u_h \right) - \langle\psi_i, k\nabla u_h\cdot \hat{n} \rangle +
