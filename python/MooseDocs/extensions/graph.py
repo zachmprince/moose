@@ -7,6 +7,7 @@
 # Licensed under LGPL 2.1, please see LICENSE for details
 # https://www.gnu.org/licenses/lgpl-2.1.html
 
+import logging
 import os
 import re
 import uuid
@@ -25,6 +26,7 @@ from ..base import components, renderers
 from ..tree import tokens, html, latex, markdown
 from . import command, floats
 
+LOG = logging.getLogger(__name__)
 
 def make_extension(**kwargs):
     return GraphExtension(**kwargs)
@@ -52,22 +54,32 @@ class GraphExtension(command.CommandExtension):
         self.addCommand(reader, GraphHistogram())
 
         renderer.add("ScatterToken", RenderScatter())
-        renderer.add("HistogramToken", RenderHistogram())
+        renderer.add("HistogramToken", RenderScatter())
+
+        if isinstance(renderer, (renderers.LatexRenderer, renderers.MarkdownRenderer)):
+            msg = None
+            if self.get("draft"):
+                msg = "Draft mode enabled in the graph extension."
+            elif not HAVE_PYTHON_PLOTLY:
+                self.update(draft=True)
+                msg = (
+                    "Draft mode enabled, plotly package failed to load, "
+                    "install with 'conda install plolty'"
+                )
+            elif not plotly.io.kaleido.kaleido_available():
+                self.update(draft=True)
+                msg = (
+                    "Draft mode enabled, kaleido not installed, "
+                    "install with 'pip install --upgrade kaleido'"
+                )
+
+            if msg:
+                if isinstance(renderer, renderers.LatexRenderer):
+                    renderer.addPackage("draftfigure", content=f"{{{msg}}}")
+                else:
+                    LOG.warning(msg)
 
         if isinstance(renderer, renderers.LatexRenderer):
-            if not HAVE_PYTHON_PLOTLY and not self.get("draft"):
-                self.update(draft=True)
-                renderer.addPackage(
-                    "draftfigure",
-                    content="{Draft mode enabled, plotly package failed to load, "
-                    "install with 'conda install plolty plotly-orca'}",
-                )
-            elif self.get("draft"):
-                renderer.addPackage(
-                    "draftfigure",
-                    content="{Draft mode enabled in the graph extension.}",
-                )
-
             renderer.addPackage("graphicx")
 
     def postTokenize(self, page, ast):
@@ -191,7 +203,7 @@ class GraphHistogram(command.CommandComponent):
         settings["title"] = ("", "Plot title")
         settings["xlabel"] = ("Value", "x-axis label")
         settings["ylabel"] = ("Probability", "y-axis label")
-        settings["legend"] = ("legend", True, "True|False toggle for legend.")
+        settings["legend"] = (True, "True|False toggle for legend.")
         settings.update(floats.caption_settings())
         settings["prefix"] = ("Figure", settings["prefix"][1])
         return settings
@@ -235,7 +247,8 @@ class GraphHistogram(command.CommandComponent):
                     raise common.exceptions.MooseDocsException(string)
                 data[i]["type"] = "histogram"
                 data[i]["x"] = reader[vectors[i]].tolist()
-                data[i]["xbins"] = settings["bins"]
+                if settings["bins"]:
+                    data[i]["nbinsx"] = int(settings["bins"])
                 data[i]["opacity"] = settings["alpha"]
                 if settings["probability"]:
                     data[i]["histnorm"] = "probability"
@@ -306,6 +319,18 @@ class GraphTemplate(object):
         return options[key]
 
 
+def fixup_plotly_settings(data: dict):
+    """Fix dictionary of plotly settings to be consistent with expected types."""
+    for k, v in data.items():
+        if isinstance(v, dict):
+            data[k] = fixup_plotly_settings(v)
+        elif isinstance(v, str):
+            if v.lower() == "none":
+                data[k] = None
+            elif v.lower() in ["true", "false"]:
+                data[k] = v.lower() == "true"
+
+
 class RenderScatter(components.RenderComponent):
     """Render a plotly scatter plot."""
 
@@ -314,7 +339,17 @@ class RenderScatter(components.RenderComponent):
 
     def add_data_trace(self, fig, data):
         """Add data to trace of figure. Used for image generation."""
-        fig.add_scatter(**data)
+        plot_type = data.pop("type", None)
+        if plot_type is None:
+            fig.add_scatter(**data)
+        else:
+            go_type = plot_type.capitalize()
+            go_cls = getattr(plotly.graph_objs, go_type, None)
+            if go_cls is None:
+                raise common.exceptions.MooseDocsException(
+                    "Unknown plotly.graph_objs type: {trace_type}."
+                )
+            fig.add_trace(go_cls(**data))
 
     def createImage(self, token, page):
         """Create image of plotly figure in PDF format."""
@@ -330,15 +365,19 @@ class RenderScatter(components.RenderComponent):
         layout.setdefault("yaxis", dict())
         layout["yaxis"].setdefault("linewidth", 1)
 
+        fixup_plotly_settings(layout)
         layout = plotly.graph_objs.Layout(**layout)
         fig = plotly.graph_objs.Figure(layout=layout)
         for data in token["data"]:
+            fixup_plotly_settings(data)
             self.add_data_trace(fig, data)
 
-        _, loc = tempfile.mkstemp(suffix=".pdf", dir=os.path.dirname(page.destination))
+        dir = os.path.dirname(page.destination)
+        os.makedirs(dir, exist_ok=True)
+        _, loc = tempfile.mkstemp(suffix=".pdf", dir=dir)
         plotly.io.write_image(fig, loc)
 
-        return loc
+        return os.path.basename(loc)
 
     def createHTML(self, parent, token, page):
         plot_id = str(uuid.uuid4())
@@ -361,11 +400,3 @@ class RenderScatter(components.RenderComponent):
     def createMarkdown(self, parent, token, page):
         loc = self.createImage(token, page)
         return markdown.Image(parent, src=loc)
-
-
-class RenderHistogram(RenderScatter):
-    """Render a plotly histogram plot."""
-
-    def add_data_trace(self, fig, data):
-        """Add data to trace of figure. Used for image generation."""
-        fig.add_trace(plotly.graph_objs.Histogram(**data))

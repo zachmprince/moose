@@ -3,7 +3,7 @@
 This example assumes that the reader has already visited the example in [examples/parameter_study.md] and is familiar
 with the fundamental blocks used in parent input files.
 In this example, the effect of varying the distribution of the uncertain
-parameters on the distribution of the Quantities of Interest (QoIs) is showcased as well.   
+parameters on the distribution of the Quantities of Interest (QoIs) is showcased as well.
 
 ## Problem Description
 
@@ -24,7 +24,7 @@ problem with fixed parameters first. The input file used for this purpose is pro
 The nominal values of the uncertain parameters are $\mu_{1,n}=0.3$ and $\mu_{2,n}$=9 in this case.
 There are two blocks in the input file that are worth examining in detail.
 The first is the `Kernels` block that shows that a custom test kernel has been implemented to be
-able to handle the exponential reaction term in [nonlin-diff-react-strong].  
+able to handle the exponential reaction term in [nonlin-diff-react-strong].
 To use this kernel, the user has to add an additional argument for the
 Stochastic Tools executioner as follows:
 
@@ -119,7 +119,6 @@ $\overline{u}_{avg} = -0.1326,\,95\%\, CI[-0.1332, -0.1319]$
 
 !plot histogram filename=stochastic_tools/examples/parameter_study/nonlin_diff_react/gold/nonlin_diff_react_parent_uniform_out_results_0002.csv
                 vectors=results:min
-                bins=50
                 xlabel=Minimum value
                 id=results_u_min_uniform
                 caption=Resulting distribution of $u_{min}$ with uniformly distributed parameters.
@@ -127,7 +126,6 @@ $\overline{u}_{avg} = -0.1326,\,95\%\, CI[-0.1332, -0.1319]$
 
 !plot histogram filename=stochastic_tools/examples/parameter_study/nonlin_diff_react/gold/nonlin_diff_react_parent_uniform_out_results_0002.csv
                 vectors=results:max
-                bins=50
                 xlabel=Maximum Value
                 id=results_u_max_uniform
                 caption=Resulting distribution of $u_{max}$ with uniformly distributed parameters.
@@ -135,14 +133,12 @@ $\overline{u}_{avg} = -0.1326,\,95\%\, CI[-0.1332, -0.1319]$
 
 !plot histogram filename=stochastic_tools/examples/parameter_study/nonlin_diff_react/gold/nonlin_diff_react_parent_uniform_out_results_0002.csv
                 vectors=results:average
-                bins=50
                 xlabel=Average Value
                 id=results_u_avg_uniform
                 caption=Resulting distribution of $u_{avg}$ with uniformly distributed parameters.
 
 !plot histogram filename=stochastic_tools/examples/parameter_study/nonlin_diff_react/gold/nonlin_diff_react_parent_normal_out_results_0002.csv
                 vectors=results:min
-                bins=50
                 xlabel=Minimum value
                 id=results_u_min_normal
                 caption=Resulting distribution of $u_{min}$ with normally distributed parameters.
@@ -150,7 +146,6 @@ $\overline{u}_{avg} = -0.1326,\,95\%\, CI[-0.1332, -0.1319]$
 
 !plot histogram filename=stochastic_tools/examples/parameter_study/nonlin_diff_react/gold/nonlin_diff_react_parent_normal_out_results_0002.csv
                 vectors=results:max
-                bins=50
                 xlabel=Maximum Value
                 id=results_u_max_normal
                 caption=Resulting distribution of $u_{max}$ with normally distributed parameters.
@@ -158,7 +153,6 @@ $\overline{u}_{avg} = -0.1326,\,95\%\, CI[-0.1332, -0.1319]$
 
 !plot histogram filename=stochastic_tools/examples/parameter_study/nonlin_diff_react/gold/nonlin_diff_react_parent_normal_out_results_0002.csv
                 vectors=results:average
-                bins=50
                 xlabel=Average Value
                 id=results_u_avg_normal
                 caption=Resulting distribution of $u_{avg}$ with normally distributed parameters.

@@ -188,7 +188,7 @@ class Heading(MarkdownNode):
         id: str = "",
         **kwargs,
     ):
-        super().__init__(parent, level=level, id=str(id), **kwargs)
+        super().__init__(parent, level=int(level), id=str(id), **kwargs)
 
 
 class Code(Text):
