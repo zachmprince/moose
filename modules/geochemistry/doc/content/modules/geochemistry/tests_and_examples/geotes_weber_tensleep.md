@@ -249,7 +249,7 @@ It is interesting to compare the concentration of species in the model when the 
 
 !table id=table:model_transported_bulk caption=Composition at 92$^{\circ}$C after removing minerals in comparison with the original measurements.
 | Species | Measured conc (molal) | Model conc (molal) |
-| --- | --- | --- | --- |
+| --- | --- | --- |
 | Cl- | 1.619044933 | 1.5059455 |
 | SO4-- | 0.062774835 | 0.068842508 |
 | HCO3- | 0.065489838 | 0.00090808324 |
@@ -375,7 +375,7 @@ The Weber-Tensleep aquifer is around 200$\,$m thick, and injecting and producing
 | Aquifer initial temperature | 92$^{\circ}$C |
 | Aquifer horizontal permeability | $1.7\times 10^{-15}\,$m$^{2}$ |
 | Aquifer vertical permeability | $4.1\times 10^{-16}\,$m$^{2}$ |
-| Aquifer porosity | 0.1 | 
+| Aquifer porosity | 0.1 |
 | Aquifer thermal conductivity | 1.3$\,$W.m$^{-1}$.K$^{-1}$ |
 | Cap thickness | 20$\,$m |
 | Cap isotropic permeability | $10^{-18}\,$m$^{2}$ |

@@ -16,7 +16,7 @@ Velocity data were recorded at selected points along the central subchannel axia
 !table id=parameters caption=Operational parameters for PNNL 2X6-pin benchmark.
 | Case number | Initial Flow $[GPM]$  | Final Flow $[GPM]$ | time $[sec]$ | Power Gradient
 |$Q_H [kW/pin]$ | $Q_L [kW/pin]$ | Re {initial/final} |
-| :- | :- | :- | :- | :- | :- | :- | :- | :- |
+| :- | :- | :- | :- | :- | :- | :- | :- |
 | $5$ | $3.08$ | $1.08$ | $150$ | $0:0$ | $0.0$ | $0.0$ | $1200/420$ |
 | $9$ | $3.08$ | $3.08$ | S.S | $1:0$ | $0.91$ | $0.0$ | $1290/1290$ |
 | $13$ | $3.08$ | $3.08$ | S.S | $2:1$ | $0.91$ | $0.455$ | $1340/1340$ |

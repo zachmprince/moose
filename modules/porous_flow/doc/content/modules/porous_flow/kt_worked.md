@@ -173,9 +173,9 @@ Note that $P$ concerns the negative entries of $K$, so these are the bits that a
 To this end, KT split $P$ and $Q$ into their positive and negative parts, and limit these parts separately (see Eqns (47), (48), (49) and the discussion of flux limiting on pp 134--135).  In our simple situation, there are four distinct cases, that are explicitly worked out in [kt_choices].  In working through this table, note that the end goal is $f_{i,i+1}^{a}$ (defined in KT Eqn (50)), which is the antidiffusive flux travelling from downwind node $i+1$ to the upwind node $i$.  Its purpose is to counter the diffusion we added in the $D$ matrix.
 
 !table id=kt_choices caption=Possible choices for u around node $i$ and the consequences for the antidiffusion.  A "?" indicates the quantity is ill-defined due to a division $0/0$, but that the quantity does not matter.  In each case node $i+1$ is downwind of node $i$.
-| | $u_{i-1}<u_{i}$ and $u_{i}>u_{i+1}$ | $u_{i-1}<u_{i}$ and $u_{i}<u_{i+1}$ | $u_{i-1}>u_{i}$ and $u_{i}<u_{i+1}$ | $u_{i-1}>u_{i}$ and $u_{i}>u_{i+1}$ |
+| Quantity | $u_{i-1}<u_{i}$ and $u_{i}>u_{i+1}$ | $u_{i-1}<u_{i}$ and $u_{i}<u_{i+1}$ | $u_{i-1}>u_{i}$ and $u_{i}<u_{i+1}$ | $u_{i-1}>u_{i}$ and $u_{i}>u_{i+1}$ |
 | --- | --- | --- | --- | --- |
-| | $u_{i}$ at maximum | $u$ increasing downstream | $u_{i}$ at minimum | $u$ decreasing downstream |
+| --- | $u_{i}$ at maximum | $u$ increasing downstream | $u_{i}$ at minimum | $u$ decreasing downstream |
 | $Q_{i}^{+}$ | 0 | 0 | $(u_{i-1}-u_{i})v/2>0$ | $(u_{i-1}-u_{i})v/2>0$ |
 | $Q_{i}^{-}$ | $(u_{i-1}-u_{i})v/2<0$ | $(u_{i-1}-u_{i})v/2<0$ | 0 | 0 |
 | $P_{i}^{+}$ | $(u_{i}-u_{i+1})v/2>0$ | 0 | 0 | $(u_{i}-u_{i+1})v/2>0$ |

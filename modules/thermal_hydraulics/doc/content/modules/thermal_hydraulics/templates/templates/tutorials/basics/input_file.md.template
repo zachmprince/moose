@@ -36,10 +36,10 @@ parameter_name = value
 
 There are several +types+ of values that can be supplied as parameters:
 
-| Parameter type | Example value | Note
+| Parameter type | Example value | Note |
 | :- | :- | :- |
-| Integer | `1` |
-| Real | `3.2` |
+| Integer | `1` | |
+| Real | `3.2` | |
 | Vector of integers | `'1 14 6'` | Note the `'` around the values |
 | Vector of reals | `'1.2 5.4 6.99'` | Note the `'` around the values |
 | Point in 3D space | `'x y z'` | `x`, `y` and `z` are real spatial coordinates |

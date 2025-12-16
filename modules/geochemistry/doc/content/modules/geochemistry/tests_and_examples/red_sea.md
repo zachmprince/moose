@@ -73,7 +73,7 @@ The `geochemistry` output matches [!cite](bethke_2007) (and the GWB software) wh
 !table id=table:molalities_etc caption=Calculated molalities, activity coefficients and activities of the most abundant species in Red Sea water
 | Species | Molality (mol.kg$^{-1}$) | Activity coeff | log$_{10}$a |
 | --- | --- | --- | --- |
-| Cl$^{-}$ | 5.182 | 0.6125 | 0.5017 | 
+| Cl$^{-}$ | 5.182 | 0.6125 | 0.5017 |
 | Na$^{+}$ | 4.86 | 0.7036 | 0.5341 |
 | NaCl | 0.551 | 1.0 | -0.2587 |
 | CaCl$^{+}$ | 0.1277 | 0.7036 | -1.047 |
@@ -117,7 +117,7 @@ Allowing the minerals to precipitate, both codes and [!cite](bethke_2007) predic
 
 !table id=table:minerals caption=Calculated final mass of each precipitate in the stable phase assemblage for the Red Sea brine.
 | Mineral | Mass (g) |
-| --- | --- | --- |
+| --- | --- |
 | Fluorite | $7.3\times 10^{-3}$ |
 | Chalcocite | $9.3\times 10^{-6}$ |
 | Barite | $1.4\times 10^{-7}$ |

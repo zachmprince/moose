@@ -17,7 +17,7 @@ This component creates the following auxiliary scalar variable, where `<cname>`
 is the name of the component:
 
 | Variable | Description |
-| :- | :- | :- |
+| :- | :- |
 | `<cname>:power` | Power \[W\] |
 
 !syntax inputs /Components/TotalPower

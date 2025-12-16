@@ -50,7 +50,7 @@ The uncertain parameters are assumed to be uniformly distributed $\sim\mathcal{U
 
 !table
 | Parameter | Symbol | Distribution |
-| :- | - | - | - |
+| :- | - | - |
 | Diffusion coefficient multiplier | $C$ | $\sim\mathcal{U}(0.01, 0,02)$ |
 | Frequency multiplier | $f$ | $\sim\mathcal{U}(15, 25)$ |
 | Initial temperature | $T_0$ | $\sim\mathcal{U}(270, 330)$ |
@@ -89,7 +89,7 @@ example is expensive in terms of computation time, the same samples are used
 to train the other surrogates as well.
 It is not visible, but the sampler prepares 216 parameter vectors altogether.
 
-!listing surrogates/combined/trans_diff_2d/trans_diff_trainer.i block=Samplers  
+!listing surrogates/combined/trans_diff_2d/trans_diff_trainer.i block=Samplers
 
 The objects in blocks `Controls`, `MultiApps`, `Transfers` and `Reporters`
 are responsible for managing the communication between the trainer and sub-applications,
@@ -125,7 +125,7 @@ using a [LatinHypercubeSampler.md] object in the `Samplers` block.
 Since the surrogate models are orders of magnitude faster, $100,000$ samples are
 prepared for testing (compared to $216$ used for training).
 
-!listing surrogates/combined/trans_diff_2d/trans_diff_surr.i block=Samplers  
+!listing surrogates/combined/trans_diff_2d/trans_diff_surr.i block=Samplers
 
 Next, the necessary objects are created in the `Surrogates` block using the
 information available within the corresponding restartable data files.

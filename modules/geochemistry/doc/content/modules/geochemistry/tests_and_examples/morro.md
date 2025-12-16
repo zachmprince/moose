@@ -107,7 +107,7 @@ The species distribution predicted by [!cite](bethke_2007) is shown in the right
 
 !table id=table:molalities_etc caption=Calculated molalities (mol.kg$^{-1}$) of iron species in Morro de Ferro groundwater, assuming redox equilibrium (central column) or disequilibrium (right-hand column)
 | Species | Equilibrium | Disequilibrium |
-| --- | --- | --- | --- |
+| --- | --- | --- |
 | Fe$^{2+}$ | $0.11\times 10^{-12}$ | $0.13\times 10^{-4}$ |
 | FeSO$_{4}$ | $0.24\times 10^{-15}$ | $0.28\times 10^{-8}$ |
 | FeHCO$_{3}^{-}$ | $0.20\times 10^{-16}$ | $0.24\times 10^{-8}$ |

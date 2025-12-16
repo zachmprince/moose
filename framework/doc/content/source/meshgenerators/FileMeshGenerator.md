@@ -44,7 +44,7 @@ for convenience if you are considering using MOOSE as a mesh file converter.
 These formats (for writing meshes) are supported by libMesh and could easily be added to MOOSE if needed:
 
 | Extension     | Description                       |
-| :-            | :-                       | :- |
+| :-            | :-                       |
 | .fro          | ACDL's surface triangulation file |
 | .mesh, .meshb | Medit |
 | .msh          | GMSH ASCII file |

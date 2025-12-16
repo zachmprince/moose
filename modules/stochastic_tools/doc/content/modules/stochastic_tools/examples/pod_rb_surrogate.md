@@ -44,7 +44,7 @@ specified in [param_distributions] with $a$ and $b$ being the lower and upper bo
 
 !table id=param_distributions caption=The distributions of the uncertain parameters used in this problem ([!cite](prince2019parametric)).
 | Parameter | Symbol | Distribution |
-| :- | - | - | - |
+| :- | - | - |
 | Diffusion coefficient in Region 1 $\left(cm\right)$ | $D_1$ | $\sim\mathcal{U}(0.2, 0.8)$ |
 | Diffusion coefficient in Region 2 $\left(cm\right)$ | $D_2$ | $\sim\mathcal{U}(0.2, 0.8)$ |
 | Diffusion coefficient in Region 3 $\left(cm\right)$ | $D_3$ | $\sim\mathcal{U}(0.2, 0.8)$ |
@@ -122,7 +122,7 @@ This is done using a [LatinHypercubeSampler.md] defined in the  `Samplers` block
 It is visible that 100 samples are prepared, meaning that 100 snapshots will be collected
 for the generation of the surrogates.
 
-!listing surrogates/pod_rb/2d_multireg/trainer.i block=Samplers  
+!listing surrogates/pod_rb/2d_multireg/trainer.i block=Samplers
 
 To be able to create the reduced operators for the surrogate model, a custom `MultiApp`,
 [PODFullSolveMultiApp.md], has been created. This object is responsible for executing
@@ -174,7 +174,7 @@ As a next step, new samples are generated using these distributions. Again, a [L
 is employed for this task, however this time the number of samples is increased to 1000 since the
 surrogates are orders of magnitudes faster than the full-order model.
 
-!listing surrogates/pod_rb/2d_multireg/surr.i block=Samplers  
+!listing surrogates/pod_rb/2d_multireg/surr.i block=Samplers
 
 A [PODReducedBasisSurrogate.md] is created in the `Surrogates` block.
 It is constructed using the information available within the corresponding `.rd` file
@@ -295,7 +295,7 @@ generation of a surrogate model is a better alternative.
 
 !table id=com_time caption=The computation time of the full-order solutions on the test set compared to the cost of training a surrogate and evaluating it on the same test set.
 | Process | Execution time (s) |
-| :- | - | - | - |
+| :- | - |
 | Evaluation of the full-order model on the 1000 sample test set | 779.5 |
 | Training a POD-RB surrogate using 100 samples | 116.2 |
 | Evaluation of the POD-RB surrogate on the 1000 sample test set (4 basis functions) | 0.592 |
