@@ -6,9 +6,11 @@
 #
 # Licensed under LGPL 2.1, please see LICENSE for details
 # https://www.gnu.org/licenses/lgpl-2.1.html
+from pathlib import Path
 
 from .project_find import project_find
 from . import exceptions
+from .. import MOOSE_DIR
 
 
 def check_filenames(filename):
@@ -21,6 +23,14 @@ def check_filenames(filename):
     if filename == "":
         raise exceptions.MooseDocsException("Empty file name")
     filenames = project_find(filename)
+
+    # moose might not be in "moose/" so replace with MOOSE_DIR and try again
+    if len(filenames) == 0 and Path(filename).parents[-2] == Path("moose"):
+        new_path = Path(MOOSE_DIR) / Path(filename).relative_to(Path("moose"))
+        new_filenames = project_find(str(new_path))
+        if len(new_filenames) == 1:
+            filenames = new_filenames
+
     if len(filenames) == 0:
         msg = (
             "{} does not exist in the repository. The command 'git ls-files' is used for "
