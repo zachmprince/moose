@@ -53,17 +53,15 @@ class TestGenerate(unittest.TestCase):
         self.assertEqual(status, 0)
         self.assertEqual(len(filenames), 3)
         self.assertTrue(
-            filenames[0].endswith("moose/framework/doc/content/syntax/Kernels/index.md")
+            filenames[0].endswith("framework/doc/content/syntax/Kernels/index.md")
         )
         self.assertTrue(
             filenames[1].endswith(
-                "moose/framework/doc/content/source/actions/AddKernelAction.md"
+                "framework/doc/content/source/actions/AddKernelAction.md"
             )
         )
         self.assertTrue(
-            filenames[2].endswith(
-                "moose/framework/doc/content/source/kernels/Diffusion.md"
-            )
+            filenames[2].endswith("framework/doc/content/source/kernels/Diffusion.md")
         )
 
     @staticmethod

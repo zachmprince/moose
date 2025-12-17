@@ -25,7 +25,7 @@ def check_filenames(filename):
     filenames = project_find(filename)
 
     # moose might not be in "moose/" so replace with MOOSE_DIR and try again
-    if len(filenames) == 0 and Path(filename).parents[-2] == Path("moose"):
+    if len(filenames) == 0 and Path(filename).parts[0] == "moose":
         new_path = Path(MOOSE_DIR) / Path(filename).relative_to(Path("moose"))
         new_filenames = project_find(str(new_path))
         if len(new_filenames) == 1:
