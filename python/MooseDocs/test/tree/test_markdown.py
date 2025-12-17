@@ -6,6 +6,7 @@
 #
 # Licensed under LGPL 2.1, please see LICENSE for details
 # https://www.gnu.org/licenses/lgpl-2.1.html
+"""Module for testing MooseDocs/tree/markdown.py."""
 
 import os
 import re
@@ -15,7 +16,10 @@ from MooseDocs.tree import markdown
 
 
 class TestMarkdownTree(unittest.TestCase):
+    """Test basic markdown tree elements."""
+
     def test_heading(self):
+        """Render headings at several levels and confirm identifier handling."""
         head = markdown.Heading(level=1)
         markdown.Text(head, content="Very Cool Heading")
         self.assertEqual(head.write(), "# Very Cool Heading")
@@ -29,6 +33,7 @@ class TestMarkdownTree(unittest.TestCase):
         self.assertEqual(head.write(), "# Very Cool Heading With ID {#label}")
 
     def test_code(self):
+        """Emit inline and fenced code blocks with and without language hints."""
         code = markdown.Code(content='print("Hello World!")')
         self.assertEqual(code.write(), '`print("Hello World!")`')
 
@@ -40,6 +45,7 @@ class TestMarkdownTree(unittest.TestCase):
         self.assertEqual(code_block.write(), '``` python\nprint("Hello World!")\n```')
 
     def test_link(self):
+        """Build a hyperlink node and confirm Markdown serialization."""
         link = markdown.Link(url="https://mooseframework.inl.gov/")
         markdown.Text(link, content="MOOSE Website")
         self.assertEqual(
@@ -47,6 +53,7 @@ class TestMarkdownTree(unittest.TestCase):
         )
 
     def test_lists(self):
+        """Verify ordered, unordered, and nested lists generate correct structure."""
         def make_list(parent):
             for i in range(3):
                 li = markdown.ListItem(parent)
@@ -80,6 +87,7 @@ class TestMarkdownTree(unittest.TestCase):
         self.assertEqual(nl.write(), expected)
 
     def test_block_quote(self):
+        """Ensure block quotes preserve line prefixes for multi-line content."""
         message = ["Hello from MooseDocs!", "I think therefore I am"]
         q = markdown.MarkdownNode(pf_cls="BlockQuote")
         p = markdown.Paragraph(q)
@@ -90,6 +98,7 @@ class TestMarkdownTree(unittest.TestCase):
         self.assertEqual(q.write(), expected.strip())
 
     def test_formats(self):
+        """Exercise the common inline formatting nodes (bold, italics, etc.)."""
         message = "formatted_string"
 
         def check_format(pf_cls, deco_st, deco_ed=None):
@@ -107,6 +116,7 @@ class TestMarkdownTree(unittest.TestCase):
         check_format("Superscript", "^")
 
     def test_cite(self):
+        """Confirm inline citations yield the expected footnote markers."""
         p = markdown.Paragraph()
         markdown.Text(p, content="This is one citation: ")
         markdown.Cite(p, key="foo")
@@ -120,6 +130,7 @@ class TestMarkdownTree(unittest.TestCase):
         self.assertEqual(content[1].strip(), "This is another citation: [^bar]")
 
     def test_bibliography(self):
+        """Render a bibliography block using pybtex-generated footnotes."""
         from pybtex.database import parse_file
         from pybtex.plugin import find_plugin
 
@@ -150,17 +161,21 @@ class TestMarkdownTree(unittest.TestCase):
 
 [^testkey]: Jane Smith and John Doe.
     A test citation without special characters for easy testing.
-    *A Prestigous Journal*, 1980."""
+    *A Prestigous Journal*, 1980."""  # noqa: E501
         self.assertEqual(content, expected)
 
 
 class TestMarkdownAlert(unittest.TestCase):
+    """Test workflow for adding alerts."""
+
     def test_icon(self):
+        """Map every supported icon key to its Unicode emoji output."""
         for icon_name, emoji in markdown.Icon.ICON_EMOJI_DICT.items():
             icon = markdown.Icon(icon=icon_name)
             self.assertEqual(icon.write(), emoji.decode("utf-8"))
 
     def test_alert_no_title(self):
+        """Render an alert with only the directive header and body text."""
         alert = markdown.Alert()
         markdown.Text(alert, content="[!NOTE]", raw=True)
         markdown.MarkdownNode(alert, "LineBreak")
@@ -171,6 +186,7 @@ class TestMarkdownAlert(unittest.TestCase):
         self.assertRegex(content, expected)
 
     def test_alert_title_no_icon(self):
+        """Render an alert with a bolded title but no icon glyph."""
         alert = markdown.Alert()
         markdown.Text(alert, content="[!NOTE]", raw=True)
         markdown.MarkdownNode(alert, "LineBreak")
@@ -185,6 +201,7 @@ class TestMarkdownAlert(unittest.TestCase):
         self.assertRegex(content, expected)
 
     def test_alert(self):
+        """Render a full alert including icon, title, and content lines."""
         alert = markdown.Alert()
         markdown.Text(alert, content="[!NOTE]", raw=True)
         markdown.MarkdownNode(alert, "LineBreak")
@@ -201,12 +218,20 @@ class TestMarkdownAlert(unittest.TestCase):
         markdown.Text(markdown.Paragraph(alert), content="Alert content")
 
         content = alert.write()
-        expected = f"^> \\[\\!NOTE\\]\\s*\\n> {icon} \\*\\*Alert title\\*\\*\\n>\\n> Alert content$"
+        expected = (
+            f"^> \\[\\!NOTE\\]\\s*\\n"
+            f"> {icon} \\*\\*Alert title\\*\\*\\n"
+            ">\\n"
+            "> Alert content$"
+        )
         self.assertRegex(content, expected)
 
 
 class TestMarkdownFloat(unittest.TestCase):
+    """Test workflow for adding floats."""
+
     def test_float(self):
+        """Create a float with caption, label, and body text sections."""
         flt = markdown.Float()
         cap = markdown.Caption(flt)
         cap.id = "label"
@@ -222,6 +247,7 @@ class TestMarkdownFloat(unittest.TestCase):
         self.assertEqual(lines[2], "Hello World!")
 
     def test_float_no_label_no_caption(self):
+        """Ensure floats without captions or labels pass through raw content."""
         flt = markdown.Float()
         p = markdown.Paragraph(flt)
         markdown.Text(p, content="Hello World!")
@@ -231,6 +257,7 @@ class TestMarkdownFloat(unittest.TestCase):
         self.assertEqual(lines[0], "Hello World!")
 
     def test_float_no_label(self):
+        """Verify floats handle captions without automatically assigning IDs."""
         flt = markdown.Float()
         cap = markdown.Caption(flt)
         markdown.Text(cap, content="This is a caption.")
@@ -245,6 +272,7 @@ class TestMarkdownFloat(unittest.TestCase):
         self.assertEqual(lines[2], "Hello World!")
 
     def test_table(self):
+        """Render a captioned table float and confirm column alignment syntax."""
         flt = markdown.Float()
         caption = markdown.MarkdownNode(flt, "Span")
         caption.id = "tab:table_label"
@@ -291,6 +319,7 @@ class TestMarkdownFloat(unittest.TestCase):
         self.assertRegex(cells[1][2], r"^-+:$")
 
     def test_image(self):
+        """Exercise the image helper across captioned, labeled, and float cases."""
         # No caption no label
         img = markdown.Image(src="image.png")
         self.assertEqual(img.write(), "![](image.png)")
