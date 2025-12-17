@@ -6,9 +6,6 @@ Content:
             - large_media/testing/*
             - large_media/level_set/vortex_out.mp4
             - bib/*
-            # - contrib/**
-            # - css/*
-            # - js/*
     test:
         root_dir: python/MooseDocs/test/content
     external:
