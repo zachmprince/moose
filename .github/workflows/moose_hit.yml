@@ -1,6 +1,8 @@
+# This workflow builds HIT as a python wheel using cibuildwheel
+# Currently, it is only triggered manually.
 name: moose_hit
 
-on: [pull_request]
+on: workflow_dispatch  # Can only be triggered manually for now
 
 jobs:
   build_wheels:
