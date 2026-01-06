@@ -1,0 +1,18 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "moose-pyhit"
+description = "Python wrapper for MOOSE HIT Parser"
+version = "2026.01.05"
+requires-python = ">=3.10"
+authors = [
+    { name = "Logan Harbour", email = "loganhharbour@gmail.com" },
+    { name = "Zachary Prince", email = "zachmprince@gmail.com" },
+]
+dependencies = ["moose-hit", "moosepy"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["__init__.py", "pyhit.py"]
+sources = {"" = "pyhit"}

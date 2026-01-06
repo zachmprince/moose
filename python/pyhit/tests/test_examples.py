@@ -9,11 +9,21 @@
 # https://www.gnu.org/licenses/lgpl-2.1.html
 """Tests pyhit API on input files."""
 
+import os
 import unittest
 
 
 class TestExamples(unittest.TestCase):
     """Tests loading and writing input files with pyhit."""
+
+    def setUp(self):
+        """Change to the directory this file is in."""
+        self._origwd = os.getcwd()
+        os.chdir(os.path.dirname(__file__))
+
+    def tearDown(self):
+        """Change back to original working directory."""
+        os.chdir(self._origwd)
 
     def test(self):
         """Test loading and writing input files with pyhit."""

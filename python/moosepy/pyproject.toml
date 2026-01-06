@@ -1,0 +1,18 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[project]
+name = "moosepy"
+description = "Python utilities for interacting with MOOSE simulations."
+version = "2026.01.05"
+requires-python = ">=3.10"
+authors = [
+    { name = "Logan Harbour", email = "loganhharbour@gmail.com" },
+    { name = "Zachary Prince", email = "zachmprince@gmail.com" },
+]
+dependencies = ["typing_extensions"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["__init__.py", "perfgraph", "tree"]
+sources = {"" = "moosepy"}

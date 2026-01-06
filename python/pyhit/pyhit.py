@@ -9,10 +9,15 @@
 
 """Wrapper for hit parser."""
 import os
+from importlib.util import find_spec
 
 import hit
 import moosepy.tree as moosetree
-from mooseutils import message
+
+if find_spec("mooseutils") is not None:
+    from mooseutils import message
+else:
+    message = None
 
 
 class Node(moosetree.Node):
@@ -327,8 +332,10 @@ def load(filename, root=None):
             content = fid.read()
     elif isinstance(filename, str):
         content = filename
-    else:
+    elif message is not None:
         message.mooseError("Unable to load the hit file ", filename)
+    else:
+        raise ValueError(f"Unable to load the hit file {filename}")
 
     return parse(content, root, filename)
 

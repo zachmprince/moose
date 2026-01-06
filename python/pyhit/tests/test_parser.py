@@ -18,6 +18,15 @@ import pyhit
 class TestHitLoad(unittest.TestCase):
     """Test the load function."""
 
+    def setUp(self):
+        """Change to the directory this file is in."""
+        self._origwd = os.getcwd()
+        os.chdir(os.path.dirname(__file__))
+
+    def tearDown(self):
+        """Change back to original working directory."""
+        os.chdir(self._origwd)
+
     def testRender(self):
         """Test pyhit.Node.render."""
         root = pyhit.load(os.path.join("..", "..", "test_files", "test.hit"))
