@@ -14,7 +14,7 @@ import copy
 import re
 import time
 import traceback
-import moosetree
+import moosepy.tree as moosetree
 import moosesyntax
 import mooseutils
 

@@ -13,7 +13,7 @@ import logging
 import subprocess
 import traceback
 import mooseutils
-import moosetree
+import moosepy.tree as moosetree
 import moosesyntax
 from mooseutils.yaml_load import yaml_load
 from .check_syntax import check_syntax

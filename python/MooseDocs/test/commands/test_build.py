@@ -11,7 +11,7 @@ import os
 import unittest
 import mock
 import types
-import moosetree
+import moosepy.tree as moosetree
 import MooseDocs
 from MooseDocs.commands import build
 from MooseDocs import base, common

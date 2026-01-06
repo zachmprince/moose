@@ -10,7 +10,7 @@ import pandas
 import os
 
 import pyhit
-import moosetree
+import moosepy.tree as moosetree
 
 x_pp = 'h'
 y_pp = ['error_real', 'error_imag']

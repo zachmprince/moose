@@ -11,7 +11,7 @@ import collections
 import logging
 import pyhit
 import mooseutils
-import moosetree
+import moosepy.tree as moosetree
 import moosesqa
 from .Requirement import TestSpecification, Requirement, Detail
 

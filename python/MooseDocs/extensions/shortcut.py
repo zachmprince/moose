@@ -9,7 +9,7 @@
 
 import logging
 
-import moosetree
+import moosepy.tree as moosetree
 from ..base import Extension
 from ..common import report_error
 from . import core

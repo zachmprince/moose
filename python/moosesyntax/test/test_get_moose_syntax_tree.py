@@ -11,7 +11,7 @@
 import os
 import unittest
 import logging
-import moosetree
+import moosepy.tree as moosetree
 import mooseutils
 import moosesyntax
 

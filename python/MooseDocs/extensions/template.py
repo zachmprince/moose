@@ -9,7 +9,7 @@
 import re
 import codecs
 import logging
-import moosetree
+import moosepy.tree as moosetree
 import mooseutils
 
 import MooseDocs

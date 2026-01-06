@@ -11,7 +11,7 @@ import re
 import subprocess
 import logging
 import collections
-import moosetree
+import moosepy.tree as moosetree
 import mooseutils
 from ..base import renderers
 from ..common import exceptions, box

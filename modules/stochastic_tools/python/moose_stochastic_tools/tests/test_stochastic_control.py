@@ -16,7 +16,7 @@ import importlib.util
 import numpy as np
 
 import pyhit
-import moosetree
+import moosepy.tree as moosetree
 
 if importlib.util.find_spec("moose_stochastic_tools") is None:
     _moose_dir = os.environ.get(

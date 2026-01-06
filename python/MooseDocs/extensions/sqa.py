@@ -14,7 +14,7 @@ import codecs
 import logging
 import collections
 import traceback
-import moosetree
+import moosepy.tree as moosetree
 import uuid
 import json
 import time

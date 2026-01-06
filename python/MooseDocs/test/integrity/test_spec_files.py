@@ -14,7 +14,7 @@ import unittest
 import glob
 import mooseutils
 import pyhit
-import moosetree
+import moosepy.tree as moosetree
 import inspect
 import MooseDocs
 

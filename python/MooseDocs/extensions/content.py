@@ -12,7 +12,7 @@ import re
 import uuid
 import collections
 import logging
-import moosetree
+import moosepy.tree as moosetree
 import mooseutils
 from .. import common
 from ..common import exceptions

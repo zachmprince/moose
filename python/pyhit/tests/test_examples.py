@@ -17,7 +17,7 @@ class TestExamples(unittest.TestCase):
         # MOOSEDOCS:example-begin
         # Load the packages
         import pyhit
-        import moosetree
+        import moosepy.tree as moosetree
 
         # Read the file
         root = pyhit.load('input.i')

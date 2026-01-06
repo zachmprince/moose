@@ -11,7 +11,7 @@ import collections
 import logging
 import json
 
-import moosetree
+import moosepy.tree as moosetree
 import mooseutils
 from .nodes import SyntaxNode, MooseObjectNode, ActionNode, MooseObjectActionNode
 

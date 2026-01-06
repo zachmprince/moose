@@ -12,7 +12,7 @@ import logging
 import fnmatch
 
 import mooseutils
-import moosetree
+import moosepy.tree as moosetree
 import collections
 import MooseDocs
 from .. import common

@@ -9,7 +9,7 @@
 import os
 import logging
 import copy
-import moosetree
+import moosepy.tree as moosetree
 import mooseutils
 
 LOG = logging.getLogger(__name__)

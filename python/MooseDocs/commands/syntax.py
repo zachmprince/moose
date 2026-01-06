@@ -16,7 +16,7 @@ import logging
 
 import MooseDocs
 import moosesqa
-import moosetree
+import moosepy.tree as moosetree
 import mooseutils
 import moosesyntax
 

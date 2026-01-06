@@ -14,7 +14,7 @@ import re
 import uuid
 import logging
 
-import moosetree
+import moosepy.tree as moosetree
 
 from ..base import components, renderers, Executioner, Extension
 from ..common import exceptions

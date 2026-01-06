@@ -11,7 +11,7 @@ import os
 import uuid
 import logging
 import json
-import moosetree
+import moosepy.tree as moosetree
 from . import common
 from ..base import components, renderers, Extension
 from ..common import exceptions, write

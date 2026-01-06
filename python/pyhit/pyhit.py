@@ -9,7 +9,7 @@
 
 """Wrapper for hit parser."""
 import os
-import moosetree
+import moosepy.tree as moosetree
 import hit
 from mooseutils import message
 

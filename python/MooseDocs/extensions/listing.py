@@ -7,7 +7,7 @@
 #* Licensed under LGPL 2.1, please see LICENSE for details
 #* https://www.gnu.org/licenses/lgpl-2.1.html
 import pyhit
-import moosetree
+import moosepy.tree as moosetree
 import difflib
 from moosesyntax import SyntaxNode, ObjectNodeBase
 import json

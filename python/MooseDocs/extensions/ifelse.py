@@ -12,7 +12,7 @@ import re
 import importlib
 import collections
 import logging
-import moosetree
+import moosepy.tree as moosetree
 import mooseutils
 import MooseDocs
 from ..base import Extension, components

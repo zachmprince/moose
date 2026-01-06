@@ -10,7 +10,7 @@ import sys
 import re
 import uuid
 import logging
-import moosetree
+import moosepy.tree as moosetree
 from .. import common
 from ..base import components, renderers
 from ..tree import tokens, html, latex

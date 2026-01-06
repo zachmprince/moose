@@ -8,7 +8,7 @@
 #* https://www.gnu.org/licenses/lgpl-2.1.html
 import re
 import logging
-import moosetree
+import moosepy.tree as moosetree
 from ..base import renderers, components
 from ..tree import html, tokens
 from . import core, command

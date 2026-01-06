@@ -11,7 +11,7 @@ import uuid
 import collections
 import re
 import logging
-import moosetree
+import moosepy.tree as moosetree
 import MooseDocs
 from ..common import exceptions, report_error
 from ..base import components, MarkdownReader, LatexRenderer, Extension

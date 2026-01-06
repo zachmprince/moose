@@ -14,7 +14,7 @@ import logging
 import traceback
 import codecs
 import shutil
-import moosetree
+import moosepy.tree as moosetree
 import copy
 
 import MooseDocs

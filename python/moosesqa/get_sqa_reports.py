@@ -13,7 +13,7 @@ import copy
 import subprocess
 import logging
 import mooseutils
-import moosetree
+import moosepy.tree as moosetree
 import pyhit
 
 LOG = logging.getLogger(__name__)

@@ -8,7 +8,7 @@
 #* https://www.gnu.org/licenses/lgpl-2.1.html
 import html
 import re
-import moosetree
+import moosepy.tree as moosetree
 from .base import NodeBase
 
 class Tag(NodeBase):

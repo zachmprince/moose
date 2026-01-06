@@ -9,7 +9,7 @@
 
 import collections
 import logging
-import moosetree
+import moosepy.tree as moosetree
 from ..base import components, renderers
 from ..common import exceptions
 from ..tree import pages, tokens, html, latex

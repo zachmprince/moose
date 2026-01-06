@@ -16,7 +16,7 @@ from pybtex.database.input.bibtex import UndefinedMacro, Person
 from pybtex.errors import set_strict_mode
 from pylatexenc.latex2text import LatexNodes2Text
 
-import moosetree
+import moosepy.tree as moosetree
 
 from ..common import exceptions
 from ..base import components, LatexRenderer, MarkdownReader

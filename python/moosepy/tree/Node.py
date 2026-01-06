@@ -1,32 +1,42 @@
 """
-For simplicity this module should be a stand-alone package, i.e., it should not use any
-non-standard python packages such as mooseutils.
+For simplicity this module should be a stand-alone package.
+
+I.e., it should not use any non-standard python packages such as mooseutils.
 """
+
 import copy
+
 from . import search
+
 
 class Node(object):
     """
     Base class for tree nodes that accepts arbitrary attributes.
 
-    Create a new node in the tree that is a child of *parent* with the given *name*. The supplied
-    *parent* must be another `Node` object. All keyword arguments are stored as "attributes" and may
-    be of any type.
+    Create a new node in the tree that is a child of *parent* with the given
+    *name*. The supplied *parent* must be another `Node` object. All keyword
+    arguments are stored as "attributes" and may be of any type.
 
-    !alert warning title=Speed is Important!
-    The need for this object comes from the MooseDocs package, which uses tree objects extensively.
-    Originally, MooseDocs used the anytree package for these structures. As the MooseDocs system
-    evolved as well as the amount of documentation, in particular the amount of generated HTML
-    output, the speed in creating the tree nodes became critical. The anytree package is robust and
-    well designed, but the construction of the nodes was not fast enough.
+    !alert warning title=Speed is Important! The need for this object comes from
+    the MooseDocs package, which uses tree objects extensively. Originally,
+    MooseDocs used the anytree package for these structures. As the MooseDocs
+    system evolved as well as the amount of documentation, in particular the
+    amount of generated HTML output, the speed in creating the tree nodes became
+    critical. The anytree package is robust and well designed, but the
+    construction of the nodes was not fast enough.
     """
 
     def __init__(self, parent, name, **kwargs):
         """
+        Construct Node object.
+
         This constructor must be as minimal as possible for speed purposes.
 
-        IMPORTANT: Do not add more items to this unless you have good reason, it will impact
-                   MooseDocs performance greatly.
+        Notes
+        -----
+        Do not add more items to this unless you have good reason, it will impact
+        MooseDocs performance greatly.
+
         """
         self.__children = list()
         self.__parent = parent
@@ -48,7 +58,11 @@ class Node(object):
 
     @parent.setter
     def parent(self, new_parent):
-        """Set the parent Node object to *new_parent*, use None to remove the node from the tree."""
+        """
+        Set the parent Node object to *new_parent*.
+
+        Use None to remove the node from the tree.
+        """
         if (self.__parent is not None) and (self in self.__parent.__children):
             self.__parent.__children.remove(self)
 
@@ -58,7 +72,8 @@ class Node(object):
 
     @property
     def children(self):
-        """Return a list of children.
+        """
+        Return a list of children.
 
         !alert note
         The list is a copy but the Node objects in the list are not.
@@ -72,14 +87,14 @@ class Node(object):
 
     @property
     def count(self):
-        """Return the number of all descendants"""
+        """Return the number of all descendants."""
         count = len(self.__children)
         for child in self.__children:
             count += child.count
         return count
 
     def __iter__(self):
-        """Iterate of the children (e.g., `for child in node:`)"""
+        """Iterate of the children (e.g., `for child in node:`)."""
         return iter(self.__children)
 
     def insert(self, idx, child):
@@ -104,7 +119,11 @@ class Node(object):
 
     @property
     def is_root(self):
-        """Return True if the Node is a root, i.e., is the parent node object set to None."""
+        """
+        Return True if the Node is a root.
+
+        I.e., is the parent node object set to None.
+        """
         return self.__parent is None
 
     @property
@@ -122,7 +141,7 @@ class Node(object):
         if (self.__parent is not None) and (self.__parent.__children):
             idx = self.__parent.__children.index(self)
             if idx > 0:
-                return self.__parent.__children[idx-1]
+                return self.__parent.__children[idx - 1]
 
     @property
     def next(self):
@@ -130,7 +149,7 @@ class Node(object):
         if (self.__parent is not None) and (self.__parent.__children):
             idx = self.__parent.__children.index(self)
             if idx < len(self.__parent.__children) - 1:
-                return self.__parent.__children[idx+1]
+                return self.__parent.__children[idx + 1]
 
     def __call__(self, *args):
         """Return child nodes based on index."""
@@ -141,7 +160,11 @@ class Node(object):
 
     @property
     def attributes(self):
-        """Return the a 'attributes' (key, value pairs supplied in construction) for this node."""
+        """
+        Return the a 'attributes' for this node.
+
+        (key, value pairs supplied in construction)
+        """
         return self.__attributes
 
     def __getitem__(self, key):
@@ -161,7 +184,11 @@ class Node(object):
         return self.__attributes.get(key, default)
 
     def items(self):
-        """Return the dict() iterator to the attributes, i.e., `k, v in node.items()`."""
+        """
+        Return the dict() iterator to the attributes.
+
+        I.e., `k, v in node.items()`.
+        """
         return self.__attributes.items()
 
     def __len__(self):
@@ -179,18 +206,18 @@ class Node(object):
     def __repr__(self):
         """Return the 'name' of the object as it should be printed in the tree."""
         if self.__attributes:
-            return '{}: {}'.format(self.name, repr(self.__attributes))
+            return "{}: {}".format(self.name, repr(self.__attributes))
         return self.name
 
-    def __print(self, indent=u''):
-        """Helper function printing to the screen."""
+    def __print(self, indent=""):
+        """Helper function printing to the screen."""  # noqa: D401
         if (self.parent is None) or (self.parent.children[-1] is self):
-            out = u'{}\u2514\u2500 {}\n'.format(indent, repr(self))
-            indent += u"   "
+            out = "{}\u2514\u2500 {}\n".format(indent, repr(self))
+            indent += "   "
 
         else:
-            out = u'{}\u251c\u2500 {}\n'.format(indent, repr(self))
-            indent += u"\u2502  "
+            out = "{}\u251c\u2500 {}\n".format(indent, repr(self))
+            indent += "\u2502  "
 
         for child in self.children:
             out += child.__print(indent)

@@ -9,7 +9,7 @@
 #* https://www.gnu.org/licenses/lgpl-2.1.html
 
 import os, re, time
-import moosetree
+import moosepy.tree as moosetree
 import pyhit
 
 """
