@@ -1,58 +1,69 @@
-#* This file is part of the MOOSE framework
-#* https://mooseframework.inl.gov
-#*
-#* All rights reserved, see COPYRIGHT for full restrictions
-#* https://github.com/idaholab/moose/blob/master/COPYRIGHT
-#*
-#* Licensed under LGPL 2.1, please see LICENSE for details
-#* https://www.gnu.org/licenses/lgpl-2.1.html
+# This file is part of the MOOSE framework
+# https://mooseframework.inl.gov
+#
+# All rights reserved, see COPYRIGHT for full restrictions
+# https://github.com/idaholab/moose/blob/master/COPYRIGHT
+#
+# Licensed under LGPL 2.1, please see LICENSE for details
+# https://www.gnu.org/licenses/lgpl-2.1.html
 
 """Wrapper for hit parser."""
 import os
-import moosepy.tree as moosetree
+
 import hit
+import moosepy.tree as moosetree
 from mooseutils import message
+
 
 class Node(moosetree.Node):
     """
     An [moosetree/Node.md#moosetree.node] object for building a [!ac](HIT) tree.
 
-    Add a new node to the input file tree that is a child of *parent*. The supplied *parent* must
-    be `pyhit.Node` object. The *hitnode* is name of the node, as a string.
+    Add a new node to the input file tree that is a child of *parent*. The
+    supplied *parent* must be `pyhit.Node` object. The *hitnode* is name of the
+    node, as a string.
 
-    The *hitnode* input can also be an object from the hit C bindings. However, this second form is
-    not intended for general use; it is used when creating a tree from a file when loading from a
-    file.
+    The *hitnode* input can also be an object from the hit C bindings. However,
+    this second form is not intended for general use; it is used when creating a
+    tree from a file when loading from a file.
     """
+
     def __init__(self, parent=None, hitnode=None, offset=0):
+        """Construct pyhit Node."""
         if isinstance(hitnode, str):
             hitnode = hit.NewSection(hitnode)
         elif hitnode is None:
-            hitnode = hit.NewSection('')
+            hitnode = hit.NewSection("")
         super().__init__(parent, hitnode.path())
-        self.__hitnode = hitnode         # hit.Node object
-        self.__hitblockcomment = None    # hit.Comment object for this block
-        self.__hitparamcomments = dict() # hit.Comment objects for the parameters within this block
-        self.__hitoffset = offset        # hit index used for inserting new hit nodes
+        self.__hitnode = hitnode  # hit.Node object
+        self.__hitblockcomment = None  # hit.Comment object
+        self.__hitparamcomments = dict()  # hit.Comment objects for the parameters
+        self.__hitoffset = offset  # hit index used for inserting new hit nodes
         self.__reinitComments()
 
     @property
     def fullpath(self):
-        """
-        Return the node full path as a string.
-        """
+        """Return the node full path as a string."""
         out = []
         node = self
-        while (node is not None):
+        while node is not None:
             out.append(node.name)
             node = node.parent
-        return '/'.join(reversed(out))
+        return "/".join(reversed(out))
 
     def insert(self, index, name, **kwargs):
         """
-        Insert a child input block, with the given *name*, to the current block +before+ the *index*.
+        Insert a child input block.
 
-        The keyword arguments supplied are added as parameters to the inserted block.
+        Parameters
+        ----------
+        index : int
+            Index to insert block +before+
+        name : str
+            Name of the block
+        kwargs: dict[str, Any]
+            Keyword arguments that are added as parameters to the inserted block.
+
         """
         count = 0
         hit_index = 0
@@ -88,24 +99,26 @@ class Node(moosetree.Node):
         """
         Return a +copy+ of the comment for the block or parameter given by *param*.
 
-        When this method is called without arguments it returns the comments for the block itself.
-        When called with the *param* name, the comment for that parameter is returned.
+        When this method is called without arguments it returns the comments for
+        the block itself. When called with the *param* name, the comment for
+        that parameter is returned.
 
-        !alert note title=The "comment" method returns a copy.
-        This method returns a copy of the comment text. To modify the comment, the "setComment"
-        method must be used.
+        !alert note title=The "comment" method returns a copy. This method
+        returns a copy of the comment text. To modify the comment, the
+        "setComment" method must be used.
         """
         comment = self.__hitparamcomments.get(param, self.__hitblockcomment)
         if comment is not None:
-            return str(comment).strip('\n# ')
+            return str(comment).strip("\n# ")
 
     def setComment(self, *args):
         """
         Add/Set comment for the block or parameter.
 
-        There are two modes of operation. The first (`setComment(text)`) sets the comment of the
-        block itself to the supplied *text*. The second (`setComment(param, text)` sets the comment
-        of the supplied *param* with the value of *text*.
+        There are two modes of operation. The first (`setComment(text)`) sets
+        the comment of the block itself to the supplied *text*. The second
+        (`setComment(param, text)` sets the comment of the supplied *param* with
+        the value of *text*.
         """
         if len(args) == 1:
             param = None
@@ -115,7 +128,7 @@ class Node(moosetree.Node):
 
         comment = self.__hitparamcomments.get(param, self.__hitblockcomment)
         if (comment is not None) and (text is not None):
-            comment.setText('# {}'.format(text))
+            comment.setText("# {}".format(text))
 
         if (comment is not None) and (text is None):
             if comment is self.__hitblockcomment:
@@ -125,28 +138,26 @@ class Node(moosetree.Node):
                 comment.remove()
 
         elif (comment is None) and (param is None) and (text is not None):
-            self.parent.__hitnode.insertChild(self.__hitoffset, hit.NewComment('# {}'.format(text)))
+            self.parent.__hitnode.insertChild(
+                self.__hitoffset, hit.NewComment(f"# {text}")
+            )
             self.__reinitComments()
 
         elif (comment is None) and (param is not None) and (text is not None):
             for child in self.__hitnode.children(hit.NodeType.Field):
                 if child.path() == param:
-                    child.addChild(hit.NewComment('# {}'.format(text), True))
+                    child.addChild(hit.NewComment("# {}".format(text), True))
                     self.__reinitComments()
                     break
 
     def remove(self):
-        """
-        Remove this node form the tree.
-        """
+        """Remove this node form the tree."""
         self.__hitnode.remove()
         self.__hitnode = None
         self.parent = None
 
     def removeParam(self, name):
-        """
-        Remove the supplied parameter with *name* from the node.
-        """
+        """Remove the supplied parameter with *name* from the node."""
         for child in self.__hitnode.children(hit.NodeType.Field):
             if child.path() == name:
                 child.remove()
@@ -155,9 +166,9 @@ class Node(moosetree.Node):
         """
         Return a string of the node that is rendered with C hit library with formatting.
 
-        An optional keyword argument *canonical_section_markers* can be supplied with `True` or
-        `False` to enable/disable the use of "./" and "../" section markings. By default these
-        markings this are removed.
+        An optional keyword argument *canonical_section_markers* can be supplied
+        with `True` or `False` to enable/disable the use of "./" and "../"
+        section markings. By default these markings this are removed.
         """
         formatter = hit.Formatter()
         formatter.config(**kwargs)
@@ -166,13 +177,15 @@ class Node(moosetree.Node):
 
     def render(self, **kwargs):
         """
-        Return a string of the node this rendered with the C hit library without formatting.
+        Return a string of the node.
+
+        This is rendered with the C hit library without formatting.
         """
         return self.__hitnode.render()
 
     def __contains__(self, name):
         """
-        Provides operator in access to the parameters of this node.
+        Access to the parameters of this node.
 
         ```python
         if 'foo' in param:
@@ -194,9 +207,7 @@ class Node(moosetree.Node):
             yield child.path(), child.param()
 
     def get(self, name, default=None):
-        """
-        Return a parameter, if it does not exist return the default.
-        """
+        """Return a parameter, if it does not exist return the default."""
         value = self.__hitnode.param(name)
         if value is None:
             return default
@@ -206,10 +217,11 @@ class Node(moosetree.Node):
         """
         Return the line number for node itself or for the supplied *name*.
 
-        When the *name* is not included the line number for the beginning of the block is returned;
-        and when it is included the line number is returned.
+        When the *name* is not included the line number for the beginning of the
+        block is returned; and when it is included the line number is returned.
 
-        When *name* is used and the parameter is not located, the *default* is returned.
+        When *name* is used and the parameter is not located, the *default* is
+        returned.
         """
         if name is None:
             return self.__hitnode.line()
@@ -223,9 +235,11 @@ class Node(moosetree.Node):
     def filename(self, name=None, default=None):
         """
         Return the file name for node itself or for the supplied *name*.
-        When the *name* is not included the file name for the beginning of the block is returned;
-        and when it is included the file name is returned.
-        When *name* is used and the parameter is not located, the *default* is returned.
+
+        When the *name* is not included the file name for the beginning of the
+        block is returned; and when it is included the file name is returned.
+        When *name* is used and the parameter is not located, the *default* is
+        returned.
         """
         if name is None:
             return self.__hitnode.filename()
@@ -237,18 +251,20 @@ class Node(moosetree.Node):
         return default
 
     def __getitem__(self, name):
-        """
-        Provides operator [] access to the parameters of this node.
-        """
+        """Provide operator [] access to the parameters of this node."""
         return self.__hitnode.param(name)
 
     def __setitem__(self, name, value):
         """
         Provide operator [] for modifying or adding parameters to this node.
 
-        Inputs:
-            name[str]: The name of the parameter
-            value[int|float|bool|str]: The parameter value
+        Parameters
+        ----------
+        name : str
+            The name of the parameter
+        value : int | float | bool | str
+            The parameter value
+
         """
         if name not in self:
             self.__addParam(name, value)
@@ -272,23 +288,22 @@ class Node(moosetree.Node):
         self.__hitnode.addChild(param)
 
     def __editParam(self, name, value):
-        """(private) Edit an existing parameter"""
+        """(private) Edit an existing parameter."""
         retcode = self.__hitnode.setParam(name, str(value))
         if retcode != 0:
             raise KeyError("Unknown parameter name '{}'".format(name))
 
     def __reinitComments(self):
-        """(private) Cache comment items for easy access"""
-
+        """(private) Cache comment items for easy access."""
         self.__hitparamcomments.clear()
         for child in self.__hitnode.children(hit.NodeType.Field):
             comment = None
-            if child.children() and (child.children()[0].type() == hit.NodeType.Comment):
+            if child.children() and child.children()[0].type() == hit.NodeType.Comment:
                 comment = child.children()[0]
             self.__hitparamcomments[child.path()] = comment
 
         self.__hitblockcomment = None
-        if (self.parent is not None):
+        if self.parent is not None:
             comment = None
             for child in self.parent.__hitnode.children():
                 if child.type() == hit.NodeType.Comment:
@@ -297,16 +312,18 @@ class Node(moosetree.Node):
                     self.__hitblockcomment = comment
                     break
 
+
 def load(filename, root=None):
     """
     Read and parse a HIT file given in *filename*.
 
-    The function return a `pyhit.Node` object which is the root node of the loaded tree. The
-    specific node object that should be populated can be supplied with the *root* input. If it is
-    provided this same node will be returned.
+    The function return a `pyhit.Node` object which is the root node of the
+    loaded tree. The specific node object that should be populated can be
+    supplied with the *root* input. If it is provided this same node will be
+    returned.
     """
     if os.path.exists(filename):
-        with open(filename, 'r') as fid:
+        with open(filename, "r") as fid:
             content = fid.read()
     elif isinstance(filename, str):
         content = filename
@@ -315,20 +332,21 @@ def load(filename, root=None):
 
     return parse(content, root, filename)
 
+
 def write(filename, root):
-    """
-    Write the supplied tree in *root* to a text file *filename*.
-    """
-    with open(filename, 'w') as fid:
+    """Write the supplied tree in *root* to a text file *filename*."""
+    with open(filename, "w") as fid:
         fid.write(root.render() + "\n")
 
-def parse(content, root=None, filename=''):
+
+def parse(content, root=None, filename=""):
     """
     Parse a hit tree from a *content* string and return a `pyhit.Node` object.
 
-    The returned object is the root of the loaded tree. The *root* input can provide a node object
-    for the tree to populate; if it is given this same node is returned. The *filename*, if provided,
-    will be used for error reporting when manipulating the tree.
+    The returned object is the root of the loaded tree. The *root* input can
+    provide a node object for the tree to populate; if it is given this same
+    node is returned. The *filename*, if provided, will be used for error
+    reporting when manipulating the tree.
     """
     if not content.strip():
         raise ValueError("pyhit cannot parse null content.")
@@ -337,22 +355,22 @@ def parse(content, root=None, filename=''):
     _parse_hit(root, hit_node, filename)
     return root
 
-def tokenize(content, filename=''):
+
+def tokenize(content, filename=""):
     """
     Tokenize a hit tree from a string.
 
-    Returns a token tree for the supplied *content* tree. The tokens returned are defined by the core
-    python bindings to the C library. The *filename*, if provided, will be used for error reporting
-    when manipulating the tree.
+    Returns a token tree for the supplied *content* tree. The tokens returned
+    are defined by the core python bindings to the C library. The *filename*, if
+    provided, will be used for error reporting when manipulating the tree.
     """
     return hit.tokenize(filename, content)
 
+
 def _parse_hit(root, hit_node, filename):
-    """Internal helper for parsing HIT tree"""
-    offset = 0
-    for hit_child in hit_node.children():
+    """(private) Parse HIT tree."""
+    for offset, hit_child in enumerate(hit_node.children()):
         if hit_child.type() == hit.NodeType.Section:
             new = Node(root, hit_child, offset=offset)
             _parse_hit(new, hit_child, filename)
-        offset += 1
     return root
